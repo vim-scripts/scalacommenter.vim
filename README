@@ -1,0 +1,81 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=3047
+
+Re-written using the Self.vim Object prototype system, hence
+justifying a major version number increase
+(see: http://www.vim.org/scripts/script.php?script_id=3072).
+The self.vim code is embedded in the scalacommenter.vim code
+so you don't need to download self.vim.
+
+Inspired by Kalle Bjorklid's JCommenter.
+Works on Vim version 7.0 and above
+
+This has two capabilities: 
+  1) Generating a comment template, and
+  2) Formatting an existing set of comment tags.
+
+Generating ScalaDoc comments for Scala sources.
+This is triggered by executing the ScalaCommentWriter() function
+  1) while the cursor is over something meaningful, or
+  2) if a (visual) selection exists,
+The selected text is parsed and the comment template generated.
+
+The following comments are generated (in the appropriate situations):
+
+1. File comments: user specifies the template, generated when the
+    cursor is on the first line of the file.
+2. Class comments: generated when on top of a class declaration
+    Tags if applicable: @author, @version, @since, @param, @tparam and @throws
+3. Trait comments: generated when on top of a trait declaration
+    Tags if applicable: @author, @version and @since
+4. Object comments: generated when on top of a object declaration
+    Tags if applicable: @author, @version and @since
+5. Inner Class comments: generated when on top of an inner class declaration
+    Tags if applicable: @param, @tparam and @throws
+6. Inner Trait comments: generated when on top of an inner trait declaration
+7. Inner Object comments: generated when on top of an inner object declaration
+8. Method comments: generated when on top of a method declaration.
+    Tags if applicable: @param, @tparam, @return and @throws
+9. Fields, val and var, comments: generated when on top of a var or val
+    declaration.
+
+If executed and the class, trait, object or method already has a ScalaDoc
+comment, an attempt is made to add/remove parameter and template parameter
+tags as needed.
+
+Formatting existing ScalaDoc comments for Scala sources.
+This is triggered by executing the ScalaCommentFormatter() function
+The user (visual) selection of the comment tag lines to be formatted
+and invokes the ScalaCommentFormatter() function.
+As an example, the following is selected and formatted:
+   * @author    Tom  Jones
+   * @version   1.3 03/10/50
+   * @param  name This is the name
+   * @param  value the value to associate with the value
+   *  This is a second line. Here is a second second line.
+   *    This is a third line. Here is a third third line.
+   * @throws java.io.EOFException For no reason
+   * @author Jane Doe
+becomes:
+   * @author  Tom Jones
+   * @author  Jane Doe
+   * @version 1.3 03/10/50
+   * @param   name                         This is the name
+   * @param   value                          the value to associate with the value This
+   *                                                     is a second line. Here is a second second
+   *                                                     line. This is a third line. Here is a third
+   *                                                     third line.
+   * @throws  java.io.EOFException For no reason
+
+Note that tags are re-ordered and grouped based upon Sun's JavaDoc guide.
+The start line selected to be formatted must be a comment tag line.
+The end line selected to be formated should be a comment tag line
+or a line containing additional text for a previous tag line.
+
+Work flow:
+  Generate comment template,
+  Fill in template and then
+  Format the comment's tags.
+
+For more details about what is produced and how to configure the production,
+see the start of the script for additional documentation.
+
