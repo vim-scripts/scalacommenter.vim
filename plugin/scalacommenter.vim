@@ -1,7 +1,7 @@
 " ============================================================================
 " ScalaCommenter.vim
 "
-" $Id: scalacommenter.vim 310 2010-04-21 19:15:45Z  $
+" $Id: scalacommenter.vim 317 2010-04-24 18:38:35Z  $
 "
 " Manage ScalaDoc comments for classes, traits, objects, methods, 
 "  vals and vars:
@@ -129,7 +129,7 @@ let b:scommenter_since_release = '1.0'
 
 " The default content for the version-tag of class-comments. Leave empty to add
 "   just the empty tag, or comment-out to prevent version tag generation
-let b:scommenter_class_svn_id = '$Id: $'
+let b:scommenter_class_svn_id = '$Id: scalacommenter.vim 317 2010-04-24 18:38:35Z  $'
 
 " The default author added to the file comments. Leave empty to add just the
 "   field where the author can be added, or comment-out to remove it.
@@ -284,9 +284,11 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 " File:          scalacommenter.vim
 " Summary:       Functions for documenting Scala-code
 " Author:        Richard Emberson <richard.n.embersonATgmailDOTcom>
-" Last Modified: 04/22/2010
-" Version:       2.0
+" Last Modified: 04/24/2010
+" Version:       2.1
 " Modifications:
+"  2.1 : Method recognition failed for the List methods: '::', 
+"          ':::' and 'reverse_:::'.
 "  2.0 : Refactored comment generation code using Self.vim, the Vim 
 "          dictionary-base object prototype system. Unified the code that
 "          generated output for both the writing and re-formatting of
@@ -300,8 +302,8 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "          template parameters have @tparam tags generated or only those
 "          at the top-level have tags generated.
 "        Fixed scanning parameters, now scans past qualifiers like 'val',
+"          'var' or 'private var', etc.
 "        Supports curried notations func(a: A)(b: B). 
-"        'var' or 'private var', etc.
 "        Added b:scommenter_extra_line_text_offset allowing the user to control
 "          the offset of any additional text associated with a tag.
 "        There is now a b:scommenter_user_tags configuration variable allowing
@@ -373,7 +375,7 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "    * created     : strftime("%c")
 "    * copyright   : b:scommenter_file_copyright_line
 "    *
-"    * $Id: scalacommenter.vim 310 2010-04-21 19:15:45Z  $
+"    * $Id: scalacommenter.vim 317 2010-04-24 18:38:35Z  $
 "    *
 "    * modifications:
 "    *
@@ -397,7 +399,7 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "   **                          |/                                          **
 "   *                                                                      */
 "
-"   $Id: scalacommenter.vim 310 2010-04-21 19:15:45Z  $
+"   $Id: scalacommenter.vim 317 2010-04-24 18:38:35Z  $
 "
 "   For this template everything is hardcoded. If one wants to change, for
 "   instance, the copyright dates, this VimScript code must be modified.
@@ -413,7 +415,7 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "    * Copyright 2010 Sun, Inc. All rights reserved
 "    * PPOPRIETARY/CONFIDENTIAL, Use is subject to licence terms.
 "    *
-"    *  $Id: scalacommenter.vim 310 2010-04-21 19:15:45Z  $
+"    *  $Id: scalacommenter.vim 317 2010-04-24 18:38:35Z  $
 "    *
 "    */
 "
@@ -430,7 +432,7 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "    * 
 "    * b:scommenter_file_copyright_list
 "    * 
-"    * $Id: scalacommenter.vim 310 2010-04-21 19:15:45Z  $
+"    * $Id: scalacommenter.vim 317 2010-04-24 18:38:35Z  $
 "    *
 "    */
 "   
@@ -2956,7 +2958,7 @@ function! s:loadMethodEntityPrototype()
         let str = strpart(str, len)
       endif
 
-      let pre_def = substitute(str, '^\(\S.*\s*\)def\s*.*', '\1', '')
+      let pre_def = substitute(str, '^\(\S.*\s*\)def\+.*', '\1', '')
 
       let len = strlen(pre_def)
       if len != strlen(str)
@@ -2964,16 +2966,35 @@ function! s:loadMethodEntityPrototype()
       endif
 
       let str = strpart(str, 3)
-      let str = substitute(str, '\s*\(.*\)', '\1', '')
+      let str = substitute(str, '\s\+\(.*\)', '\1', '')
+      let strlen = strlen(str)
+      let index = 0
+      let endStr = 0
 
-      let method_name = substitute(str, '\s*\([^([: ]\+\).*', '\1', '')
+      let prevC = ''
+      while index < strlen
+        let c = strpart(str, index, 1)
+        if c == ' '
+          break
+        elseif c == '['
+          break
+        elseif c == '('
+          break
+        elseif c == ':'
+          if index != 0
+            if prevC != ':' && prevC != '_'
+              break
+            endif
+          endif
+        endif
+
+        let prevC = c
+        let endStr = index
+        let index = index + 1
+      endwhile
+      let method_name = strpart(str, 0, endStr+1)
+
       call l:info.entity.setName(method_name)
-
-      " if method_name == 'this'
-      "   let returnTag = s:newReturnTag('instance')
-      "   let tags = l:info.getTagsSet()
-      "   call tags.append(returnTag)
-      " endif
 
       let len = strlen(method_name)
       let str = strpart(str, len)
