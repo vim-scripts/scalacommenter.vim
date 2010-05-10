@@ -1,7 +1,7 @@
 " ============================================================================
 " ScalaCommenter.vim
 "
-" $Id: scalacommenter.vim 317 2010-04-24 18:38:35Z  $
+" $Id: scalacommenter.vim 318 2010-05-10 22:47:17Z  $
 "
 " Manage ScalaDoc comments for classes, traits, objects, methods, 
 "  vals and vars:
@@ -129,7 +129,7 @@ let b:scommenter_since_release = '1.0'
 
 " The default content for the version-tag of class-comments. Leave empty to add
 "   just the empty tag, or comment-out to prevent version tag generation
-let b:scommenter_class_svn_id = '$Id: scalacommenter.vim 317 2010-04-24 18:38:35Z  $'
+let b:scommenter_class_svn_id = '$Id: scalacommenter.vim 318 2010-05-10 22:47:17Z  $'
 
 " The default author added to the file comments. Leave empty to add just the
 "   field where the author can be added, or comment-out to remove it.
@@ -284,9 +284,12 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 " File:          scalacommenter.vim
 " Summary:       Functions for documenting Scala-code
 " Author:        Richard Emberson <richard.n.embersonATgmailDOTcom>
-" Last Modified: 04/24/2010
-" Version:       2.1
+" Last Modified: 05/10/2010
+" Version:       2.2
 " Modifications:
+"  2.2 : Method parameter recognition failed def getAtomicVars(atomicMethods:
+"          List[XMethodInfo], methods: HashMap[global.Symbol, XMethodInfo], 
+"          vars: HashMap[global.Symbol, XVarInfo]) : List[XVarInfo] = {  }
 "  2.1 : Method recognition failed for the List methods: '::', 
 "          ':::' and 'reverse_:::'.
 "  2.0 : Refactored comment generation code using Self.vim, the Vim 
@@ -375,7 +378,7 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "    * created     : strftime("%c")
 "    * copyright   : b:scommenter_file_copyright_line
 "    *
-"    * $Id: scalacommenter.vim 317 2010-04-24 18:38:35Z  $
+"    * $Id: scalacommenter.vim 318 2010-05-10 22:47:17Z  $
 "    *
 "    * modifications:
 "    *
@@ -399,7 +402,7 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "   **                          |/                                          **
 "   *                                                                      */
 "
-"   $Id: scalacommenter.vim 317 2010-04-24 18:38:35Z  $
+"   $Id: scalacommenter.vim 318 2010-05-10 22:47:17Z  $
 "
 "   For this template everything is hardcoded. If one wants to change, for
 "   instance, the copyright dates, this VimScript code must be modified.
@@ -415,7 +418,7 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "    * Copyright 2010 Sun, Inc. All rights reserved
 "    * PPOPRIETARY/CONFIDENTIAL, Use is subject to licence terms.
 "    *
-"    *  $Id: scalacommenter.vim 317 2010-04-24 18:38:35Z  $
+"    *  $Id: scalacommenter.vim 318 2010-05-10 22:47:17Z  $
 "    *
 "    */
 "
@@ -432,7 +435,7 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "    * 
 "    * b:scommenter_file_copyright_list
 "    * 
-"    * $Id: scalacommenter.vim 317 2010-04-24 18:38:35Z  $
+"    * $Id: scalacommenter.vim 318 2010-05-10 22:47:17Z  $
 "    *
 "    */
 "   
@@ -2246,6 +2249,7 @@ function! s:loadAbstractEntityPrototype()
       let atTop = argDict.atTop
       let currentPos = argDict.startPos
       let len = strlen(str)
+      let bracketDepth = 0
 
       let c = strpart(str, currentPos, 1)
       if c == '(' && currentPos < len
@@ -2263,7 +2267,7 @@ function! s:loadAbstractEntityPrototype()
               let argDict.atTop = atTop
               let currentPos = argDict.endPos
 
-            elseif c == ',' && atTop == s:IS_TRUE
+            elseif c == ',' && atTop == s:IS_TRUE && bracketDepth == 0
               let pstr = s:Trim(strpart(str, startParam, currentPos - startParam))
               let paramInfo = substitute(pstr, '\([^:]*\).*', '\1', '')
               let paramName = substitute(paramInfo, '\(\S\+\s\+\)*\s*\(\S\+\)\s*', '\2', '')
@@ -2272,6 +2276,10 @@ function! s:loadAbstractEntityPrototype()
               call add(argDict.params, param)
 
               let startParam = currentPos + 1
+            elseif c == '[' 
+              let bracketDepth = bracketDepth + 1
+            elseif c == ']' 
+              let bracketDepth = bracketDepth - 1
             endif
             let currentPos = currentPos + 1
             let c = strpart(str, currentPos, 1)
