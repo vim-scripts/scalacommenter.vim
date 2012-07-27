@@ -1,8 +1,21 @@
 " ============================================================================
-" ScalaCommenter.vim
+" scala#commenter.vim
 "
-" $Id: scalacommenter.vim 318 2010-05-10 22:47:17Z  $
+" File:          scala/commenter.vim
+" Summary:       Vim Scala Comment formatting Script
+" Author:        Richard Emberson <richard.n.embersonATgmailDOTcom>
+" Last Modified: 07/30/2012
+" Version:       2.0
+" Modifications:
+"  2.0 : autoload enabled
+"  1.0 : initial public release.
 "
+" Tested on vim 7.3 on Linux
+"
+" Depends upon: self.vim
+"
+" ============================================================================
+" Intro: {{{1
 " Manage ScalaDoc comments for classes, traits, objects, methods, 
 "  vals and vars:
 "    Generate comment templates and
@@ -23,7 +36,7 @@
 " The formatting part of this script is also new.
 "
 " ============================================================================
-" Caveats: 
+" Caveats: {{{1
 " The approach to recognizing template parameters only works for
 "   simple cases. Something like [Null >: A <: AnyRef] will not be
 "   correctly read.
@@ -44,119 +57,113 @@
 " ============================================================================
 
 " ============================================================================
-" Configuration Options:
+" Configuration Options: {{{1
 "   These help control the behavior of ScalaComment.vim
 "   Remember, if you change these and then upgrade to a later version, 
 "   your changes will be lost.
 " ============================================================================
 
-" Define these just to make the code a little more readable
-"   Remember, these are script local and can not be used in your .vimrc
-"   file (but 0 and 1 can be used)
-let s:IS_FALSE = 0
-let s:IS_TRUE = 1
-
 " Move cursor to the place where inserting comments supposedly should start
-let b:scommenter_move_cursor = s:IS_TRUE
+let g:scommenter_move_cursor = g:self#IS_TRUE
 
 " Defines whether to move the cursor to the line which has "/**", or the line
-"   after that (effective only if b:scommenter_move_cursor is enabled)
-let b:scommenter_description_starts_from_first_line = s:IS_FALSE
+"   after that (effective only if g:scommenter_move_cursor is enabled)
+let g:scommenter_description_starts_from_first_line = g:self#IS_FALSE
 
 " Start insert mode after calling the commenter. Effective only if 
-"   b:scommenter_move_cursor is enabled.
-let b:scommenter_autostart_insert_mode = s:IS_FALSE
+"   g:scommenter_move_cursor is enabled.
+let g:scommenter_autostart_insert_mode = g:self#IS_FALSE
 
 " The number of empty rows (containing only the star) to be added for the 
 "   description of the method
-let b:scommenter_method_description_space = 1
+let g:scommenter_method_description_space = 2
 
 " The number of empty rows (containing only the star) to be added for the 
 "   description of the class
-let b:scommenter_class_description_space = 2
+let g:scommenter_class_description_space = 2
 
 " The number of empty rows (containing only the star) to be added for the 
 "   description of the object
-let b:scommenter_object_description_space = 2
+let g:scommenter_object_description_space = 2
 
 " The number of empty rows (containing only the star) to be added for the 
 "   description of the trait
-let b:scommenter_trait_description_space = 2
+let g:scommenter_trait_description_space = 2
 
 " The number of empty rows (containing only the star) to be added for the 
 "   description of the inner class
-let b:scommenter_inner_class_description_space = 1
+let g:scommenter_inner_class_description_space = 1
 
 " The number of empty rows (containing only the star) to be added for the 
 "   description of the inner object
-let b:scommenter_inner_object_description_space = 1
+let g:scommenter_inner_object_description_space = 1
 
 " The number of empty rows (containing only the star) to be added for the 
 "   description of the inner trait
-let b:scommenter_inner_trait_description_space = 1
+let g:scommenter_inner_trait_description_space = 1
 
 " The number of empty rows (containing only the star) to be added for the´
 "   description of the field. Can be also -1, which means that "/**  */" is 
 "   added above the field declaration 
-let b:scommenter_field_description_space = 1
+let g:scommenter_field_description_space = 1
 
 " If this option is enabled, and a method has no exceptions, parameters,
 "   template parameters or return value, the space for the description of 
 "   that method is allways one row. This is handy if you want to keep an 
 "   empty line between the description and the tags, as is defined in 
 "   Sun's java code conventions
-let b:scommenter_smart_description_spacing = s:IS_TRUE
+let g:scommenter_smart_description_spacing = g:self#IS_TRUE
 
 " For top-level classes with parameters and template parameters and traits with
 "   template parameters, if enabled then an empty line separates the 
 "   @since tag and any @param and/or @tparam tags.
 "
 " Note: currently not supported
-" let b:scommenter_smart_since_spacing = s:IS_TRUE
+" let g:scommenter_smart_since_spacing = g:self#IS_TRUE
 
 " The default content for the author-tag of class-comments. Leave empty to add
 "   just the empty tag, or outcomment to prevent author tag generation
-let b:scommenter_class_author = 'Ada Lovelace'
+let g:scommenter_class_author = 'Richard Emberson'
 
 " Include '@version version, date' in class/trait/object comments
 "   Used to indicate the current version of the particular class/trait/object.
-let b:scommenter_class_version = '1.0, ' . strftime("%d/%m/%y")
+let g:scommenter_class_version = '1.0, ' . strftime("%d/%m/%y")
 
 " Include '@since since_release' in class/trait/object comments
 "   Used to indicate that the class/trait/object has been part of the
 "   application since a given release.
-let b:scommenter_since_release = '1.0'
+let g:scommenter_since_release = '1.0'
 
 " The default content for the version-tag of class-comments. Leave empty to add
 "   just the empty tag, or comment-out to prevent version tag generation
-let b:scommenter_class_svn_id = '$Id: scalacommenter.vim 318 2010-05-10 22:47:17Z  $'
+let g:scommenter_class_svn_id = '$Id: scala#commenter.vim 318 2010-05-10 22:47:17Z  $'
 
 " The default author added to the file comments. Leave empty to add just the
 "   field where the author can be added, or comment-out to remove it.
-let b:scommenter_file_author = 'Ada Lovelace'
+let g:scommenter_file_author = 'Ada Lovelace'
 
 " The default copyright holder added to the file comments. Leave empty to
 "   add just the field where the copyright info can be added, or comment-out
 "   to remove it.
-let b:scommenter_file_copyright_line = ''
-let b:scommenter_company_name = 'ScalaCorp, Inc.'
-let b:scommenter_file_copyright_list = [
-\    'Copyright 2010 ' . b:scommenter_company_name . 'All rights reserved',
+let g:scommenter_file_copyright_line = ''
+let g:scommenter_company_name = 'FooBar Corp, Inc.'
+let g:scommenter_file_copyright_list = [
+\    'Copyright 2010 ' . g:scommenter_company_name . 'All rights reserved',
 \    'PPOPRIETARY/CONFIDENTIAL, Use is subject to licence terms.'
 \]
 
 " Set to true if you don't like the automatically added "created"-time
-let b:scommenter_file_noautotime = s:IS_FALSE
+let g:scommenter_file_noautotime = g:self#IS_FALSE
 
 " Define whether scommenter tries to parse and update the existing Doc-comments
 "   on the item it was executed on. If this feature is disabled, a completely 
 "   new comment-template is written
-let b:scommenter_update_comments = s:IS_TRUE
+let g:scommenter_update_comments = g:self#IS_TRUE
 
 
 " Whether to prepend an empty line before the generated comment, if the
 "   line just above the comment would otherwise be non-empty.
-let b:scommenter_add_empty_line = 1
+let g:scommenter_add_empty_line = 1
 
 " Uncomment and modify if you're not happy with the default file
 "   comment-template:
@@ -170,21 +177,21 @@ let b:scommenter_add_empty_line = 1
 "  call append(5, ' */')
 "endfunction
 
-" Set to s:IS_TRUE to use the StdFileComments function to write file comments
-let b:scommenter_std_file_comments = s:IS_FALSE
+" Set to g:self#IS_TRUE to use the StdFileComments function to write file comments
+let g:scommenter_std_file_comments = g:self#IS_FALSE
 
-" Set to s:IS_TRUE to use the ScalaAPIFileComments function to write file comments
-let b:scommenter_scala_api_file_comments = s:IS_FALSE 
+" Set to g:self#IS_TRUE to use the ScalaAPIFileComments function to write file comments
+let g:scommenter_scala_api_file_comments = g:self#IS_FALSE 
 
-" Set to s:IS_TRUE to use the SunFileComments function to write file comments
-let b:scommenter_sun_file_comments = s:IS_FALSE
+" Set to g:self#IS_TRUE to use the SunFileComments function to write file comments
+let g:scommenter_sun_file_comments = g:self#IS_FALSE
 
 " If true, then only top-level template parameters have @tparam tags 
 "   generated. If false, then all template parameters have tags generated
-let b:scommenter_top_level_tparams_only = s:IS_TRUE
+let g:scommenter_top_level_tparams_only = g:self#IS_TRUE
 
 " Line width of a page. This is used when wrapping text in comments
-let b:scommenter_page_width = 80
+let g:scommenter_page_width = 80
 
 " If positive, this is the value used to offset extra tag text lines,
 "   If non-positive, then the extra text lines will line up with the
@@ -192,7 +199,7 @@ let b:scommenter_page_width = 80
 " NOTE: This is a very useful formatting parameter, I suggest defining
 "   it to be 20. That way extra text lines will not have to be all
 "   the way on the right like the first text line.
-let b:scommenter_extra_line_text_offset = -1
+let g:scommenter_extra_line_text_offset = -1
 
 " Used by a user to define third-party tags
 " format of a user tag definition:
@@ -210,7 +217,7 @@ let b:scommenter_extra_line_text_offset = -1
 " Examples:
 "   Tag found in Scala code:
 "    @note text
-"       let b:scommenter_user_tags = [
+"       let g:scommenter_user_tags = [
 "       \["note", 0, 1, 0]
 "       \]
 "     has name, no value, has text, singleton
@@ -220,7 +227,7 @@ let b:scommenter_extra_line_text_offset = -1
 "    @post text
 "    @requires value text
 "    @provides text
-"       let b:scommenter_user_tags = [
+"       let g:scommenter_user_tags = [
 "       \["pre", 0, 1, 0],
 "       \["post", 0, 1, 0],
 "       \["requires", 1, 1, 0],
@@ -231,7 +238,7 @@ let b:scommenter_extra_line_text_offset = -1
 "    @immutable
 "    @threadsafe
 "    @notthreadsave
-"       let b:scommenter_user_tags = [
+"       let g:scommenter_user_tags = [
 "       \["immutable", 0, 1, 0],
 "       \["threadsafe", 0, 1, 0],
 "       \["notthreadsafe", 0, 1, 0]
@@ -239,28 +246,28 @@ let b:scommenter_extra_line_text_offset = -1
 "
 "   Method and Field concurrency annotations
 "    @guardedby value
-"       let b:scommenter_user_tags = [
+"       let g:scommenter_user_tags = [
 "       \["guardedby", 1, 1, 0]
 "       \]
 "     has name, has value, has text, singleton
 "
-let b:scommenter_user_tags = []
+let g:scommenter_user_tags = []
 
 " If true, then warning messages are printed, otherwise nothing
 "   If some configuration parameter is not doing what you think it 
-"   should or nothing is happening, then set this to s:IS_TRUE (in your
+"   should or nothing is happening, then set this to g:self#IS_TRUE (in your
 "   .vimrc file using 1)
-let b:scommenter_warning_message_enable = s:IS_FALSE
+let g:scommenter_warning_message_enable = g:self#IS_FALSE
 
 " Should an empty comment line be printed between an user/unknown
 "   tags the standard tags. If there are no user/unknown tags, then
 "   no line is produced.
-let b:scommenter_line_between_user_unknown_and_std_tags = s:IS_TRUE
+let g:scommenter_line_between_user_unknown_and_std_tags = g:self#IS_TRUE
 
 " Should the user/unknown tags be formatted before any of the 
 "   standard tags. If there are no user/unknown tags, then this
 "   parameter does nothing.
-let b:scommenter_user_unknown_before_std_tags = s:IS_TRUE
+let g:scommenter_user_unknown_before_std_tags = g:self#IS_TRUE
       
 " When re-generating comments sometimes the values associated with of @param
 "   or @tparam will change but the text associate with the tag still applies.
@@ -271,7 +278,7 @@ let b:scommenter_user_unknown_before_std_tags = s:IS_TRUE
 "   tag is move to the bottom of the comment below a warining line.
 "   This allows the user to move the tags text to the new tag if that is
 "   what is needed
-let b:scommenter_warn_deleted_tags = s:IS_TRUE
+let g:scommenter_warn_deleted_tags = g:self#IS_TRUE
 
 " ============================================================================
 " End of Configuration Options
@@ -279,9 +286,9 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 
 
 " ============================================================================
-" History:
+" History: {{{1
 "
-" File:          scalacommenter.vim
+" File:          scala#commenter.vim
 " Summary:       Functions for documenting Scala-code
 " Author:        Richard Emberson <richard.n.embersonATgmailDOTcom>
 " Last Modified: 05/10/2010
@@ -301,24 +308,24 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "          first comment generation, and subsequent generation all
 "          use the came code.
 "        Text associated with an existing comment tag is no longer lost.
-"        Add b:scommenter_top_level_tparams_only which controls if all
+"        Add g:scommenter_top_level_tparams_only which controls if all
 "          template parameters have @tparam tags generated or only those
 "          at the top-level have tags generated.
 "        Fixed scanning parameters, now scans past qualifiers like 'val',
 "          'var' or 'private var', etc.
 "        Supports curried notations func(a: A)(b: B). 
-"        Added b:scommenter_extra_line_text_offset allowing the user to control
+"        Added g:scommenter_extra_line_text_offset allowing the user to control
 "          the offset of any additional text associated with a tag.
-"        There is now a b:scommenter_user_tags configuration variable allowing
+"        There is now a g:scommenter_user_tags configuration variable allowing
 "          the user to register in their .vimrc file third-party tags.
-"        Added b:scommenter_warning_message_enable which controls the printing
+"        Added g:scommenter_warning_message_enable which controls the printing
 "          of warning messages (if any)
-"        Added b:scommenter_line_between_user_unknown_and_std_tags which
+"        Added g:scommenter_line_between_user_unknown_and_std_tags which
 "          controls if a single comment line is printed between the
 "          user/unknown tags and the standard tags.
-"        Added b:scommenter_user_unknown_before_std_tags which controls the
+"        Added g:scommenter_user_unknown_before_std_tags which controls the
 "          order of formatting of the user/unknown tags and the standard tags.
-"        Added b:scommenter_warn_deleted_tags which allows the user to
+"        Added g:scommenter_warn_deleted_tags which allows the user to
 "          save the text from tags deleted during re-formatting.
 "        Supports capturing parameter template @specialized information
 "          in comments.
@@ -330,10 +337,10 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 
 
 " ============================================================================
-" Description: 
+" Description: {{{1
 "
 " Functions for automatically generating ScalaDoc compatible comments.
-" The ScalaCommentWriter() can produce a number of kinds of comments 
+" The scala#commenter#Writer() can produce a number of kinds of comments 
 " depending on the current line/range.
 " 
 " Supported tags in the order they should appear in a comment are:
@@ -370,15 +377,15 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "   default File Comment template is used (see below).
 "   
 "   The StdFileComments() comment is enabled the configuration parameter:
-"      let b:scommenter_std_file_comments = s:IS_TRUE
+"      let g:scommenter_std_file_comments = g:self#IS_TRUE
 "   
 "   /*
 "    * file name   : bufname("%")
-"    * authors     : b:scommenter_file_author
+"    * authors     : g:scommenter_file_author
 "    * created     : strftime("%c")
-"    * copyright   : b:scommenter_file_copyright_line
+"    * copyright   : g:scommenter_file_copyright_line
 "    *
-"    * $Id: scalacommenter.vim 318 2010-05-10 22:47:17Z  $
+"    * $Id: scala#commenter.vim 318 2010-05-10 22:47:17Z  $
 "    *
 "    * modifications:
 "    *
@@ -390,7 +397,7 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "
 "
 "   The ScalaAPIFileComments() comment is enabled the configuration parameter:
-"      let b:scommenter_scala_api_file_comments = s:IS_TRUE
+"      let g:scommenter_scala_api_file_comments = g:self#IS_TRUE
 "   This is the File Comment used in the Scala library.   
 "   
 "   /*
@@ -402,14 +409,14 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "   **                          |/                                          **
 "   *                                                                      */
 "
-"   $Id: scalacommenter.vim 318 2010-05-10 22:47:17Z  $
+"   $Id: scala#commenter.vim 318 2010-05-10 22:47:17Z  $
 "
 "   For this template everything is hardcoded. If one wants to change, for
 "   instance, the copyright dates, this VimScript code must be modified.
 "
 "
 "   The SunFileComments() comment is enabled the configuration parameter:
-"      let b:scommenter_sun_file_comments = s:IS_TRUE
+"      let g:scommenter_sun_file_comments = g:self#IS_TRUE
 "   This mirrors the File Comments found in Sun's Java libraries.
 "   
 "   /*
@@ -418,7 +425,7 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "    * Copyright 2010 Sun, Inc. All rights reserved
 "    * PPOPRIETARY/CONFIDENTIAL, Use is subject to licence terms.
 "    *
-"    *  $Id: scalacommenter.vim 318 2010-05-10 22:47:17Z  $
+"    *  $Id: scala#commenter.vim 318 2010-05-10 22:47:17Z  $
 "    *
 "    */
 "
@@ -433,13 +440,13 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "    * bufname("%")
 "    * created: strftime("%d/%m/%y")
 "    * 
-"    * b:scommenter_file_copyright_list
+"    * g:scommenter_file_copyright_list
 "    * 
-"    * $Id: scalacommenter.vim 318 2010-05-10 22:47:17Z  $
+"    * $Id: scala#commenter.vim 318 2010-05-10 22:47:17Z  $
 "    *
 "    */
 "   
-"   The b:scommenter_file_copyright_list is a list of lines that will 
+"   The g:scommenter_file_copyright_list is a list of lines that will 
 "   appear in the comment. The list can be re-defined in this file
 "   or in your .vimrc file to produce your own or your company's
 "   copyright statement.
@@ -453,12 +460,12 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "   Tags if applicable: @author, @version, @since, @param and @tparam
 " 
 "   As an example, the class defined below will yield the following
-"   Class Comment when ScalaCommentWriter is executed.
+"   Class Comment when scala#commenter#Writer is executed.
 " 
 "   /** 
 "    * 
 "    * 
-"    * @author Ada Lovelace
+"    * @author Richard Emberson
 "    * @version 1.0, 06/04/10
 "    * @since 1.0
 "    * 
@@ -472,11 +479,11 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "   class SomeClass[A,B](int: Int, name: String) {}
 "    
 "   The value of the @author comment is set by the configuration
-"   parameter b:scommenter_class_author.
+"   parameter :scommenter_class_author.
 "   The value of the @version comment is set by the configuration
-"   parameter b:scommenter_class_version.
+"   parameter g:scommenter_class_version.
 "   The value of the @since comment is set by the configuration
-"   parameter b:scommenter_since_release.
+"   parameter g:scommenter_since_release.
 "
 "   Note that the @param tags have not only the parameter name but also
 "   its type. This is done because, generally, a parameter comment
@@ -490,12 +497,12 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "   Tags if applicable: @author, @version and @since
 "
 "   As an example, the trait defined below will yield the following
-"   Class Comment when ScalaCommentWriter is executed.
+"   Class Comment when scala#commenter#Writer is executed.
 " 
 "   /** 
 "    * 
 "    * 
-"    * @author Ada Lovelace
+"    * @author Richard Emberson
 "    * @version 1.0, 06/04/10
 "    * @since 1.0
 "    */
@@ -503,20 +510,20 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 " 
 "   As with the Class Comment, the values of the @author, @version and
 "   @since are controlled by the configurable parameters
-"   b:scommenter_class_author. b:scommenter_class_version and
-"   b:scommenter_since_release respectfully.
+"   g:scommenter_class_author. g:scommenter_class_version and
+"   g:scommenter_since_release respectfully.
 "
 " 
 " 4. Object comments: generated when on top of a object declaration
 "   Tags if applicable: @author, @version and @since
 "
 "   As an example, the object defined below will yield the following
-"   Class Comment when ScalaCommentWriter is executed.
+"   Class Comment when scala#commenter#Writer is executed.
 " 
 "   /** 
 "    * 
 "    * 
-"    * @author Ada Lovelace
+"    * @author Richard Emberson
 "    * @version 1.0, 06/04/10
 "    * @since 1.0
 "    */
@@ -524,8 +531,8 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 " 
 "   As with the Class Comment, the values of the @author, @version and
 "   @since are controlled by the configurable parameters
-"   b:scommenter_class_author. b:scommenter_class_version and
-"   b:scommenter_since_release respectfully.
+"   g:scommenter_class_author. g:scommenter_class_version and
+"   g:scommenter_since_release respectfully.
 "
 " 
 " 5. Inner Class comments: generated when on top of an inner class declaration
@@ -534,7 +541,7 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "   it does not include the @author, @version and @since tags.
 " 
 "   As an example, the inner class defined below will yield the following
-"   Inner Class Comment when ScalaCommentWriter is executed.
+"   Inner Class Comment when scala#commenter#Writer is executed.
 " 
 "   /** 
 "    * 
@@ -598,7 +605,7 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "   declaration.
 "
 "   Two different Comments can be generated depending upon the value
-"   of b:scommenter_field_description_space. If it is -1, then
+"   of g:scommenter_field_description_space. If it is -1, then
 "   a single line comment is created:
 "
 "   /** */
@@ -633,7 +640,7 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "   * @since 1.23
 "
 " First select the lines (I use visual selection) and then invoke 
-" the ScalaCommentFormatter() function. This results in:
+" the scala#commenter#Formatter() function. This results in:
 "
 "  * @author  Tom Jones
 "  * @author  Jane Doe
@@ -656,10 +663,10 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 " been grouped together and re-order to abide by Sun's JavaDoc guidelines
 " (Scala does not yet have its own commenting guidelines).
 "
-" Installation:
+" Installation: {{{1
 " 
 " 0. Optionally, copy the configuration section above into a second
-"    file (e.g., scalacommenter_config.vim. If this second file is 
+"    file (e.g., scala#commenter_config.vim. If this second file is 
 "    loaded into vim after this script file, then any configuration changes 
 "    you've made in the second file are the one this script file uses 
 "    (or you can not make a copy and just edit this file).
@@ -669,9 +676,9 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "
 " 2. Put something like this in your .vimrc file:
 "
-"      autocmd FileType scala source $VIM/macros/scalacommenter.vim
+"      autocmd FileType scala source $VIM/macros/scala#commenter.vim
 "      " and optionally
-"      autocmd FileType scala source $VIM/macros/scalacommenter_config.vim
+"      autocmd FileType scala source $VIM/macros/scala#commenter_config.vim
 "
 "    Note that loading the second, configuration file
 "    after the actual script guarantees that your options are used 
@@ -681,7 +688,7 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "   If you are editing this file in one Vim session and testing in another
 "   session, using:
 "
-"     :source $HOME/.vim/scalacommenter.vim
+"     :source $HOME/.vim/scala#commenter.vim
 "     
 "   (or wherever you have place this file) to re-source this file, 
 "   then your changes will not take effect unless you comment out the lines:
@@ -699,7 +706,7 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 "   Also, if you redefine some of the configuration parameters in your
 "   .vimrc file, then re-sourcing this file will over-ride those definitions.
 "
-" Usage:
+" Usage: {{{1
 "
 " If you didn't change the mapping specified in the configuration file, 
 " you can can trigger the comment-generation by pressing Alt-c (or "Meta-c"). 
@@ -707,18 +714,18 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 " have to create your own mapping. I use something like the following mapping
 " (without the copyright blahs):
 "
-"   autocmd FileType scala source $VIM/macros/scalacommenter.vim
-"   autocmd FileType scala map cm :call ScalaCommentWriter()<CR>
-"   autocmd FileType scala map cf :call ScalaCommentFormatter()<CR>
-"   autocmd FileType scala let b:scommenter_class_author = 'Richard Emberson'
-"   autocmd FileType scala let b:scommenter_file_author = 'Richard Emberson'
-"   autocmd FileType scala let b:scommenter_file_copyright_list = [
+"   autocmd FileType scala source $VIM/macros/scala#commenter.vim
+"   autocmd FileType scala map cm :call scalac#ommenter#Writer()<CR>
+"   autocmd FileType scala map cf :call scala#commenter#Formatter()<CR>
+"   autocmd FileType scala let g:scommenter_class_author = 'Richard Emberson'
+"   autocmd FileType scala let g:scommenter_file_author = 'Richard Emberson'
+"   autocmd FileType scala let g:scommenter_file_copyright_list = [
 "   \    'COPYRIGHT and more text'
 "   \    'blah, blah'
 "   \    'and blah'
 "   \]
-"   autocmd FileType scala let b:scommenter_extra_line_text_offset = 20
-"   autocmd FileType scala let b:scommenter_user_tags = [
+"   autocmd FileType scala let g:scommenter_extra_line_text_offset = 20
+"   autocmd FileType scala let g:scommenter_user_tags = [
 "   \["pre", 0, 1, 0],
 "   \["post", 0, 1, 0],
 "   \["requires", 1, 1, 0],
@@ -736,7 +743,7 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 " way to do this. For multi-line selection uses I use the VIM visual selection
 " mode.
 "
-" Comments:
+" Comments: {{{1
 "
 "   Send any comments and/or bug reports/fixes to:
 "       Richard Emberson <richard.n.embersonATgmailDOTcom>
@@ -748,15 +755,38 @@ let b:scommenter_warn_deleted_tags = s:IS_TRUE
 " THE SCRIPT
 " ============================================================================
 
-" If set to true, then when re-sourcing this file during a vim session
-"   static/global objects may be initialized again before use.
-let s:IN_DEVELOPMENT_MODE = s:IS_FALSE
-
+" Load Once: {{{1
 " Load only once:
-" if exists("b:did_scalacom")
-"  finish
-" endif
-let b:did_scalacom = 1
+if exists("b:scala_commenter_loaded") && ! g:self#IN_DEVELOPMENT_MODE
+ finish
+endif
+let b:scala_commenter_loaded = 1
+
+" ++++++++++++++++++++++++++++++++++++++++++++
+" Reload : {{{1
+" ++++++++++++++++++++++++++++++++++++++++++++
+" ------------------------------------------------------------ 
+" scala#commenter#reload: {{{2
+"  Cals self#reload to force reloading of both scala#commenter and self
+"    libraries:
+"    call self#reload('scala#commenter#')
+"    call self#reload('self#')
+"  This function is only available in development mode, i.e.,
+"    g:self#IN_DEVELOPMENT_MODE == self#IS_TRUE
+"  To make reloading of autoloaded scala#commenter functions simple, one might
+"    want to define a mapping:
+"      map <Leader>sr :call scala#commenter#reload()
+"  parameters: None
+" ------------------------------------------------------------ 
+if !exists("*scala#commenter#reload")
+  if g:self#IN_DEVELOPMENT_MODE
+    function scala#commenter#reload()
+      call self#reload('scala#commenter#')
+      call self#reload('self#')
+    endfunction
+  endif
+endif
+
 
 " Varible that tells what is put before the written string when using
 " the AppendStr-function.
@@ -782,10 +812,10 @@ let s:deletedTagWaringStr = 'WARNING: the following tags should be delete'
 
 " These can be used to add to the tag (@param, @tparam and @return) some
 " default text.
-let s:defaultParamText  = (exists('b:scommenter_default_param'))  ? b:scommenter_default_param : ''
-let s:defaultTParamText  = (exists('b:scommenter_default_tparam'))  ? b:scommenter_default_tparam : ''
-let s:defaultReturnText = (exists('b:scommenter_default_return')) ? b:scommenter_default_return : ''
-let s:defaultExceptionText  = (exists('b:scommenter_default_exception'))  ? b:scommenter_default_exception : ''
+let s:defaultParamText  = (exists('g:scommenter_default_param'))  ? g:scommenter_default_param : ''
+let s:defaultTParamText  = (exists('g:scommenter_default_tparam'))  ? g:scommenter_default_tparam : ''
+let s:defaultReturnText = (exists('g:scommenter_default_return')) ? g:scommenter_default_return : ''
+let s:defaultExceptionText  = (exists('g:scommenter_default_exception'))  ? g:scommenter_default_exception : ''
 
 let s:getterName = 'get'
 
@@ -831,10 +861,12 @@ let s:scalaValuePattern   = '\(^\|\s\+\)val '
 " Public functions
 " ============================================================================
 
-" ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-" ScalaCommentWriter
-" ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-function! ScalaCommentWriter() range
+" ------------------------------------------------------------ 
+" scala#commenter#Writer: {{{2
+"  Create a Scala comment including tags. Uses visual selection.
+"  parameters: None
+" ------------------------------------------------------------ 
+function! scala#commenter#Writer() range
 
   let s:oldICValue = &ignorecase
   let &ignorecase = 0
@@ -878,7 +910,7 @@ let s:indent = l:info.getIndent()
 
       let s:appendPos = l:info.getDocCommentStart() - 1
       let firstLineText = l:info.getFirstLineText() 
-      call s:WriteCommentStart(l:info, firstLineText)
+      call s:WriteCommentStart(l:info, firstLineText, g:self#IS_TRUE)
 
       let tagsSet = l:info.getTagsSet()
       let maxTagNameLen = s:FindMaxTagNameLen(tagsSet) 
@@ -890,7 +922,7 @@ let s:indent = l:info.getIndent()
 
       call s:AddEmptyLineBeforeComment(l:info)
 
-    elseif exists("b:scommenter_update_comments") && b:scommenter_update_comments
+    elseif exists("g:scommenter_update_comments") && g:scommenter_update_comments
       if l:docCommentType == s:DOC_COMMENT_TYPE_SINGLE_LINE
         call s:ExpandSinglelineCommentsEx(l:info, 1)
        endif
@@ -899,9 +931,9 @@ let s:indent = l:info.getIndent()
 
       call s:UpdateAllTags(l:info)
 
-      if exists("b:scommenter_move_cursor") && b:scommenter_move_cursor && s:firstUpdatedTagLine != -1
+      if exists("g:scommenter_move_cursor") && g:scommenter_move_cursor && s:firstUpdatedTagLine != -1
         exe "normal " . s:firstUpdatedTagLine . "G$"
-        if exists("b:scommenter_autostart_insert_mode") && b:scommenter_autostart_insert_mode
+        if exists("g:scommenter_autostart_insert_mode") && g:scommenter_autostart_insert_mode
           startinsert!
         endif
       endif
@@ -913,10 +945,12 @@ let s:indent = l:info.getIndent()
   let &ignorecase = s:oldICValue
 endfunction
 
-" ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-" ScalaCommentFormatter
-" ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-function! ScalaCommentFormatter() range
+" ------------------------------------------------------------ 
+" scala#commenter#Formatter: {{{2
+"  Reformat existing Scala comments. Uses visual selection.
+"  parameters: None
+" ------------------------------------------------------------ 
+function! scala#commenter#Formatter() range
   let s:oldICValue = &ignorecase
   let &ignorecase = 0
 
@@ -980,206 +1014,20 @@ endfunction
 " Objects
 " ============================================================================
 
-" ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-" SELF.VIM ObjectPrototype
-" ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-"
-" The following is part of my self.vim script
-"
-
-" ++++++++++++++++++++++++++++++++++++++++++++
-" Vim type enumerations.
-" ++++++++++++++++++++++++++++++++++++++++++++
-let g:NUMBER_TYPE     = type(0)
-let g:STRING_TYPE     = type("")
-let g:FUNCREF_TYPE    = type(function("tr"))
-let g:LIST_TYPE       = type([])
-let g:DICTIONARY_TYPE = type({})
-let g:FLOAT_TYPE      = type(0.0)
-
-function! g:printDict(item) 
-  for key in keys(a:item)
-   echo key . ': ' . string(a:item[key])
-  endfor
-endfunction
-
-" ++++++++++++++++++++++++++++++++++++++++++++
-" SELF.VIM ObjectPrototype
-" ++++++++++++++++++++++++++++++++++++++++++++
-function! g:loadObjectPrototype()
-  if s:IN_DEVELOPMENT_MODE
-    if exists("g:ObjectPrototype")
-      unlet g:ObjectPrototype
-    endif
+" ------------------------------------------------------------ 
+" s:loadInfoPrototype: {{{2
+"   Load and return Info Prototype Object
+"  parameters: NONE
+" ------------------------------------------------------------ 
+if g:self#IN_DEVELOPMENT_MODE
+  if exists("s:InfoPrototype")
+    unlet s:InfoPrototype
   endif
-  if !exists("g:ObjectPrototype")
-    "-----------------------------------------------
-    " private variables
-    "-----------------------------------------------
-    let g:ObjectPrototype = { '_type': 'ObjectPrototype' , '_prototype': '' }
-
-    "-----------------------------------------------
-    " public methods
-    "-----------------------------------------------
-    function g:ObjectPrototype.getType() dict
-      return g:ObjectPrototype._getType(self)
-    endfunction
-
-    function g:ObjectPrototype.getPrototype() dict
-      return g:ObjectPrototype._getPrototype(self)
-    endfunction
-
-    function g:ObjectPrototype.instanceOf(prototype) dict
-      let type = a:prototype._type
-      let parent = self._prototype
-      while type(parent) == g:DICTIONARY_TYPE
-        if parent._type == type
-          return 1
-        endif
-        if type(parent._prototype) == g:DICTIONARY_TYPE
-          let parent = parent._prototype
-        else
-          break
-        endif
-      endwhile
-      return 0
-    endfunction
-
-    function g:ObjectPrototype.equals(obj) dict
-      return self == a:obj
-    endfunction
-
-    function g:ObjectPrototype.create() dict
-      return g:ObjectPrototype._create(self)
-    endfunction
-
-    function g:ObjectPrototype.delete() dict
-      return g:ObjectPrototype._delete(self)
-    endfunction
-
-
-    "-----------------------------------------------
-    " private methods
-    "-----------------------------------------------
-    
-    function g:ObjectPrototype._getType(prototype) dict
-      return a:prototype._type
-    endfunction
-
-    function g:ObjectPrototype._getPrototype(prototype) dict
-      return a:prototype._prototype
-    endfunction
-    
-    " --------------------------------------------
-    " Creates a copy of a Prototype or an object 
-    "   which is itself a copy of a Prototype.
-    "   Private values and methods, those that
-    "   start with a single '_' are not copied.
-    "   Methods and values with no leading '_' or
-    "   with more than one leading '_' are copied.
-    " --------------------------------------------
-    function g:ObjectPrototype._create(prototype) dict
-      let l:i = stridx(a:prototype._type, "Prototype")   
-      if l:i == -1
-        let l:t = a:prototype._type
-        let pt = a:prototype._prototype
-      else
-        let l:t = strpart(a:prototype._type, 0, l:i)
-        let pt = a:prototype
-      endif
-      let l:o = { '_type': l:t, '_prototype': pt }
-      " let l:t = strpart(a:prototype._type, 0, l:i)
-      " let l:o = { '_type': l:t, '_prototype': a:prototype }
-
-      for key in keys(a:prototype)
-        " If its a function, then arrange that a function is defined
-        " that calls the parent function. This allows one later to
-        " either redefine a derived object's function only 
-        " effecting its behavior (and all of its children) or
-        " redefine the base object's funciton effecting all
-        " children. If we simply copied the function reference
-        " we would lose this flexibility - it would not be 'vim.self'. 
-        " Curiously, there is just enough reflective power around to
-        " allow this to happen.
-        " If you get a function calling recursion error, it maybe 
-        " because there is some edge case the following code fails
-        " to address. Find the fix and tell me about it :-).
-        if type(a:prototype[key]) == g:FUNCREF_TYPE
-          if key[0] == '_' && key[1] != '_'
-            " Private methods are not copied
-          else
-            " Public methods are copied so that they call the parent's copy
-            let l:type = a:prototype._type
-            let l:scope = 's:'
-            if exists('s:' . l:type)
-              let l:scope = 's:'
-            elseif exists('g:' . l:type)
-              let l:scope = 'g:'
-            elseif exists('w:' . l:type)
-              let l:scope = 'w:'
-            elseif exists('t:' . l:type)
-              let l:scope = 't:'
-            elseif exists('b:' . l:type)
-              let l:scope = 'b:'
-            else
-              let l:scope = ''
-            endif
-
-            let l:fd = "function! l:o." . key . "(...) dict\n"
-
-            if l:scope != ''
-              let l:fd = l:fd . "return call(" . l:scope . type . "." . key . ", a:000, self)\n"
-            else
-              let l:fd = l:fd . "return call(self._prototype." . key . ", a:000, self)\n"
-            endif
-
-            let l:fd = l:fd . "endfunction"
-            execute l:fd
-          endif
-        else
-          " Data
-          if key[0] != '_'
-            " Public data
-            let l:o[key] = a:prototype[key]
-          elseif len(key) > 1 && key[0] == '_' && key[1] == '_'
-            " Protected data
-            let l:o[key] = deepcopy(a:prototype[key])
-          endif
-        endif
-      endfor
-      return l:o
-    endfunction
-
-    function g:ObjectPrototype._delete(prototype) dict
-      let l:i = stridx(a:prototype._type, "Prototype")   
-      if l:i != -1
-        throw "Can not delete a prototype: " . a:prototype.getType()
-      endif
-      for key in keys(a:prototype)
-        unlet a:prototype[key]
-      endfor
-    endfunction
-
-  endif
-  return g:ObjectPrototype
-endfunction
-
-
-
-" ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-" Info
-" ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+endif
 function! s:loadInfoPrototype()
-  if s:IN_DEVELOPMENT_MODE
-    if exists("s:InfoPrototype")
-      unlet s:InfoPrototype
-    endif
-  endif
   if !exists("s:InfoPrototype")
-    let s:InfoPrototype = g:loadObjectPrototype().create()
-    let s:InfoPrototype._type = 'InfoPrototype'
+    " let s:InfoPrototype = g:loadObjectPrototype().create()
+    let s:InfoPrototype = self#LoadObjectPrototype().clone('Info')
     let s:InfoPrototype.__ctype = s:UNKNOWN_TYPE
     let s:InfoPrototype.__descriptionSpace = 0
     let s:InfoPrototype.__indent = ''
@@ -1251,7 +1099,7 @@ function! s:loadInfoPrototype()
   return s:InfoPrototype
 endfunction
 function! s:newInfo(ctype)
-  let l:o = s:loadInfoPrototype().create()
+  let l:o = s:loadInfoPrototype().clone()
   let l:o.__ctype = a:ctype
   let l:o.__descriptionSpace = g:descriptionSpaceList[a:ctype]
   let l:o.__indent = s:GetIndentation(s:combinedString)
@@ -1260,23 +1108,21 @@ function! s:newInfo(ctype)
   return l:o
 endfunction
 
-" ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-" TagsSet
-" ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-" --------------------------------------------------------
-" loadTagsSetPrototype
+" ------------------------------------------------------------ 
+" s:loadTagsSetPrototype: {{{2
 "   Set of tags container
-" --------------------------------------------------------
-function! s:loadTagsSetPrototype()
-  if s:IN_DEVELOPMENT_MODE
-    if exists("s:TagsSetPrototype")
-      unlet s:TagsSetPrototype
-    endif
+"  parameters: NONE
+" ------------------------------------------------------------ 
+if g:self#IN_DEVELOPMENT_MODE
+  if exists("s:TagsSetPrototype")
+    unlet s:TagsSetPrototype
   endif
+endif
+function! s:loadTagsSetPrototype()
   if !exists("s:TagsSetPrototype")
-    let s:TagsSetPrototype = g:loadObjectPrototype().create()
-    let s:TagsSetPrototype._type = 'TagsSetPrototype'
+    " let s:TagsSetPrototype = g:loadObjectPrototype().create()
+    " let s:TagsSetPrototype._type = 'TagsSetPrototype'
+    let s:TagsSetPrototype = self#LoadObjectPrototype().clone('TagsSet')
     let s:TagsSetPrototype.__tags = { }
 
     function! s:TagsSetPrototype.getTags() dict
@@ -1359,7 +1205,7 @@ function! s:loadTagsSetPrototype()
   return s:TagsSetPrototype
 endfunction
 function! s:newTagsSet()
-  return s:loadTagsSetPrototype().create()
+  return s:loadTagsSetPrototype().clone()
 endfunction
 
 function! s:TestTagListToString(tagList)
@@ -1387,28 +1233,24 @@ endfunction
 " START Tag Prototypes
 " ********************************************
 
-" --------------------------------------------------------
-" loadBaseTagPrototype
+" ------------------------------------------------------------ 
+" s:loadBaseTagPrototype: {{{2
 "   Create abstract base prototype for all tags
-" --------------------------------------------------------
-function! s:loadBaseTagPrototype()
-  if s:IN_DEVELOPMENT_MODE
-    if exists("s:BaseTagrototype")
-      unlet s:BaseTagPrototype
-    endif
+"  parameters: NONE
+" ------------------------------------------------------------ 
+if g:self#IN_DEVELOPMENT_MODE
+  if exists("s:BaseTagrototype")
+    unlet s:BaseTagPrototype
   endif
+endif
+function! s:loadBaseTagPrototype()
   if !exists("s:BaseTagPrototype")
-    let s:BaseTagPrototype = g:loadObjectPrototype().create()
-    let s:BaseTagPrototype._type = 'BaseTagPrototype'
+    " let s:BaseTagPrototype = g:loadObjectPrototype().create()
+    " let s:BaseTagPrototype._type = 'BaseTagPrototype'
+    let s:BaseTagPrototype = self#LoadObjectPrototype().clone('BaseTag')
     let s:BaseTagPrototype.__tagName = ''
-    let s:BaseTagPrototype.__hasValue = s:IS_FALSE
-    let s:BaseTagPrototype.__hasText = s:IS_FALSE
-
-    function! s:BaseTagPrototype.initialize(tagName, hasValue, hasText) dict
-      let self.__tagName = a:tagName
-      let self.__hasValue = a:hasValue
-      let self.__hasText = a:hasText
-    endfunction
+    let s:BaseTagPrototype.__hasValue = g:self#IS_FALSE
+    let s:BaseTagPrototype.__hasText = g:self#IS_FALSE
 
     function! s:BaseTagPrototype.isLeafTag() dict
       throw "Must define in child: isLeafTag"
@@ -1437,7 +1279,11 @@ function! s:loadBaseTagPrototype()
         if a:tag.isLeafTag()
           let hasValue = self.hasValue()
           let hasText = self.hasText()
-          let poly = s:newPolyTag(nameSelf, hasValue, hasText)
+          let poly = s:newPolyTag({
+                            \ 'tagName':  nameSelf,
+                            \ 'hasValue':  hasValue,
+                            \ 'hasText':  hasText
+                            \ })
           call poly.add(self)
           call poly.add(a:tag)
           return poly
@@ -1544,37 +1390,29 @@ function! s:loadBaseTagPrototype()
   return s:BaseTagPrototype
 endfunction
 
-" --------------------------------------------------------
-" loadLeafTagPrototype
+" ------------------------------------------------------------ 
+" s:loadLeafTagPrototype: {{{2
 "   Create leaf tag prototype parameterized by if it can 
 "     have a value, if it can have text and if there can
 "     be more than one of them.
-" --------------------------------------------------------
-function! s:loadLeafTagPrototype()
-  if s:IN_DEVELOPMENT_MODE
-    if exists("s:LeafTagPrototype")
-      unlet s:LeafTagPrototype
-    endif
+"  parameters: NONE
+" ------------------------------------------------------------ 
+if g:self#IN_DEVELOPMENT_MODE
+  if exists("s:LeafTagPrototype")
+    unlet s:LeafTagPrototype
   endif
+endif
+function! s:loadLeafTagPrototype()
   if !exists("s:LeafTagPrototype")
-    let s:LeafTagPrototype = s:loadBaseTagPrototype().create()
-    let s:LeafTagPrototype._type = 'LeafTagPrototype'
-    let s:LeafTagPrototype.__canBePoly = s:IS_FALSE
+    " let s:LeafTagPrototype = s:loadBaseTagPrototype().clone()
+    " let s:LeafTagPrototype._type = 'LeafTagPrototype'
+    let s:LeafTagPrototype = s:loadBaseTagPrototype().clone('LeafTag')
+    let s:LeafTagPrototype.__canBePoly = g:self#IS_FALSE
     let s:LeafTagPrototype.__tagValue = ''
     let s:LeafTagPrototype.__tagText = ''
 
-    function! s:LeafTagPrototype.initialize(tagName, hasValue, hasText, canBePoly, tagValue, tagText) dict
-
-      let args = [a:tagName, a:hasValue, a:hasText]
-      call call(s:BaseTagPrototype.initialize, args, self)
-
-      let self.__canBePoly = a:canBePoly
-      let self.__tagValue = a:tagValue
-      let self.__tagText = a:tagText
-    endfunction
-
     function! s:LeafTagPrototype.isLeafTag() dict
-      return s:IS_TRUE
+      return g:self#IS_TRUE
     endfunction
 
     function! s:LeafTagPrototype.toList() dict
@@ -1622,7 +1460,7 @@ function! s:loadLeafTagPrototype()
     endfunction
 
     function! s:LeafTagPrototype.empty() dict
-      return s:IS_FALSE
+      return g:self#IS_FALSE
     endfunction
 
     function! s:LeafTagPrototype.write() dict
@@ -1638,36 +1476,31 @@ function! s:loadLeafTagPrototype()
   endif
   return s:LeafTagPrototype
 endfunction
-function! s:newLeafTag(tagName, hasValue, hasText,  canBePoly, tagValue, tagText)
-  let l:o = s:loadLeafTagPrototype().create()
-  call l:o.initialize(a:tagName, a:hasValue, a:hasText,  a:canBePoly, a:tagValue, a:tagText)
-  return l:o
+function! s:newLeafTag(attrs)
+  return s:loadLeafTagPrototype().clone().init(a:attrs)
 endfunction
 
 
-" --------------------------------------------------------
-" loadPolyTagPrototype
+" ------------------------------------------------------------ 
+" s:loadPolyTagPrototype: {{{2
 "   Create poly tag prototype which has a list of one or
 "     more leaf tag objects. Insertion order is preserved.
-" --------------------------------------------------------
-function! s:loadPolyTagPrototype()
-  if s:IN_DEVELOPMENT_MODE
-    if exists("s:PolyTagPrototype")
-      unlet s:PolyTagPrototype
-    endif
+"  parameters: NONE
+" ------------------------------------------------------------ 
+if g:self#IN_DEVELOPMENT_MODE
+  if exists("s:PolyTagPrototype")
+    unlet s:PolyTagPrototype
   endif
+endif
+function! s:loadPolyTagPrototype()
   if !exists("s:PolyTagPrototype")
-    let s:PolyTagPrototype = s:loadBaseTagPrototype().create()
-    let s:PolyTagPrototype._type = 'PolyTagPrototype'
+    " let s:PolyTagPrototype = s:loadBaseTagPrototype().clone()
+    " let s:PolyTagPrototype._type = 'PolyTagPrototype'
+    let s:PolyTagPrototype = s:loadBaseTagPrototype().clone('PolyTag')
     let s:PolyTagPrototype.__list = []
 
-    function! s:PolyTagPrototype.initialize(tagName, hasValue, hasText) dict
-      let args = [a:tagName, a:hasValue, a:hasText]
-      call call(s:BaseTagPrototype.initialize, args, self)
-    endfunction
-
     function! s:PolyTagPrototype.canBePoly() dict
-      return s:IS_FALSE
+      return g:self#IS_FALSE
     endfunction
 
     function! s:PolyTagPrototype.getTags() dict
@@ -1675,7 +1508,7 @@ function! s:loadPolyTagPrototype()
     endfunction
 
     function! s:PolyTagPrototype.isLeafTag() dict
-      return s:IS_FALSE
+      return g:self#IS_FALSE
     endfunction
 
     function! s:PolyTagPrototype.toList() dict
@@ -1698,17 +1531,16 @@ function! s:loadPolyTagPrototype()
   endif
   return s:PolyTagPrototype
 endfunction
-function! s:newPolyTag(tagName, hasValue, hasText)
-  let l:o = s:loadPolyTagPrototype().create()
-  call l:o.initialize(a:tagName, a:hasValue, a:hasText)
-  return l:o
+function! s:newPolyTag(attrs)
+  return s:loadPolyTagPrototype().clone().init(a:attrs)
 endfunction
 
 
 
 " --------------------------------------------------------
-" newAuthorTag
+" s:newAuthorTag: {{{2
 "   Constructor for an author leaf object.
+"  parameters:
 "     @author value
 "     tagName:    author
 "     hasValue:   true
@@ -1718,12 +1550,21 @@ endfunction
 "     tagText:    ''
 " --------------------------------------------------------
 function! s:newAuthorTag(tagValue)
-  return s:newLeafTag('author', s:IS_TRUE, s:IS_FALSE, s:IS_TRUE, a:tagValue, '')
+  let attrs = {
+          \ 'tagName': 'author',
+          \ 'hasValue': g:self#IS_TRUE,
+          \ 'hasText': g:self#IS_FALSE,
+          \ 'canBePoly': g:self#IS_TRUE,
+          \ 'tagValue': a:tagValue,
+          \ 'tagText': '' 
+          \ }
+  return s:newLeafTag(attrs)
 endfunction
 
 " --------------------------------------------------------
-" newVersionTag
+" s:newVersionTag: {{{2
 "   Constructor for a version leaf object.
+"  parameters:
 "     @version value
 "     tagName:    version
 "     hasValue:   true
@@ -1733,12 +1574,21 @@ endfunction
 "     tagText:    ''
 " --------------------------------------------------------
 function! s:newVersionTag(tagValue)
-  return s:newLeafTag('version', s:IS_TRUE, s:IS_FALSE, s:IS_FALSE, a:tagValue, '')
+  let attrs = {
+          \ 'tagName': 'version',
+          \ 'hasValue': g:self#IS_TRUE,
+          \ 'hasText': g:self#IS_FALSE,
+          \ 'canBePoly': g:self#IS_FALSE,
+          \ 'tagValue': a:tagValue,
+          \ 'tagText': '' 
+          \ }
+  return s:newLeafTag(attrs)
 endfunction
 
 " --------------------------------------------------------
-" newParamTag
+" s:newParamTag: {{{2
 "   Constructor for a param leaf object.
+"  parameters:
 "     @param value text
 "     tagName:    param
 "     hasValue:   true
@@ -1748,12 +1598,21 @@ endfunction
 "     tagText:    arg
 " --------------------------------------------------------
 function! s:newParamTag(tagValue, tagText)
-  return s:newLeafTag('param', s:IS_TRUE, s:IS_TRUE, s:IS_TRUE, a:tagValue, a:tagText)
+  let attrs = {
+          \ 'tagName': 'param',
+          \ 'hasValue': g:self#IS_TRUE,
+          \ 'hasText': g:self#IS_TRUE,
+          \ 'canBePoly': g:self#IS_TRUE,
+          \ 'tagValue': a:tagValue,
+          \ 'tagText': a:tagText
+          \ }
+  return s:newLeafTag(attrs)
 endfunction
 
 " --------------------------------------------------------
-" newTParamTag
+" s:newTParamTag: {{{2
 "   Constructor for a tparam leaf object.
+"  parameters:
 "     @tparam value text
 "     tagName:    tparam
 "     hasValue:   true
@@ -1763,12 +1622,21 @@ endfunction
 "     tagText:    arg
 " --------------------------------------------------------
 function! s:newTParamTag(tagValue, tagText)
-  return s:newLeafTag('tparam', s:IS_TRUE, s:IS_TRUE, s:IS_TRUE, a:tagValue, a:tagText)
+  let attrs = {
+          \ 'tagName': 'tparam',
+          \ 'hasValue': g:self#IS_TRUE,
+          \ 'hasText': g:self#IS_TRUE,
+          \ 'canBePoly': g:self#IS_TRUE,
+          \ 'tagValue': a:tagValue,
+          \ 'tagText': a:tagText
+          \ }
+  return s:newLeafTag(attrs)
 endfunction
 
 " --------------------------------------------------------
-" newReturnTag
+" s:newReturnTag: {{{2
 "   Constructor for a return leaf object.
+"  parameters:
 "     @return text
 "     tagName:    return
 "     hasValue:   false
@@ -1778,12 +1646,21 @@ endfunction
 "     tagText:    arg
 " --------------------------------------------------------
 function! s:newReturnTag(tagText)
-  return s:newLeafTag('return', s:IS_FALSE, s:IS_TRUE, s:IS_FALSE, '', a:tagText)
+  let attrs = {
+          \ 'tagName': 'return',
+          \ 'hasValue': g:self#IS_FALSE,
+          \ 'hasText': g:self#IS_TRUE,
+          \ 'canBePoly': g:self#IS_FALSE,
+          \ 'tagValue': '',
+          \ 'tagText': a:tagText
+          \ }
+  return s:newLeafTag(attrs)
 endfunction
 
 " --------------------------------------------------------
-" newThrowsTag
+" s:newThrowsTag: {{{2
 "   Constructor for a throws leaf object.
+"  parameters:
 "     @throws value text
 "     tagName:    throws
 "     hasValue:   true
@@ -1793,13 +1670,22 @@ endfunction
 "     tagText:    arg
 " --------------------------------------------------------
 function! s:newThrowsTag(tagValue, tagText)
-  return s:newLeafTag('throws', s:IS_TRUE, s:IS_TRUE, s:IS_TRUE, a:tagValue, a:tagText)
+  let attrs = {
+          \ 'tagName': 'throws',
+          \ 'hasValue': g:self#IS_TRUE,
+          \ 'hasText': g:self#IS_TRUE,
+          \ 'canBePoly': g:self#IS_TRUE,
+          \ 'tagValue': a:tagValue,
+          \ 'tagText': a:tagText
+          \ }
+  return s:newLeafTag(attrs)
 endfunction
 
 
 " --------------------------------------------------------
-" newSeeTag
+" s:newSeeTag: {{{2
 "   Constructor for a see leaf object.
+"  parameters:
 "     @see value 
 "     tagName:    see
 "     hasValue:   true
@@ -1809,12 +1695,21 @@ endfunction
 "     tagText:    arg
 " --------------------------------------------------------
 function! s:newSeeTag(tagValue, tagText)
-  return s:newLeafTag('see', s:IS_TRUE, s:IS_TRUE, s:IS_TRUE, a:tagValue, a:tagText)
+  let attrs = {
+          \ 'tagName': 'see',
+          \ 'hasValue': g:self#IS_TRUE,
+          \ 'hasText': g:self#IS_TRUE,
+          \ 'canBePoly': g:self#IS_TRUE,
+          \ 'tagValue': a:tagValue,
+          \ 'tagText': a:tagText
+          \ }
+  return s:newLeafTag(attrs)
 endfunction
 
 " --------------------------------------------------------
-" newSinceTag
+" s:newSinceTag: {{{2
 "   Constructor for a since leaf object.
+"  parameters:
 "     @since value 
 "     tagName:    since
 "     hasValue:   true
@@ -1824,12 +1719,21 @@ endfunction
 "     tagText:    ''
 " --------------------------------------------------------
 function! s:newSinceTag(tagValue)
-  return s:newLeafTag('since', s:IS_TRUE, s:IS_FALSE, s:IS_FALSE, a:tagValue, '')
+  let attrs = {
+          \ 'tagName': 'since',
+          \ 'hasValue': g:self#IS_TRUE,
+          \ 'hasText': g:self#IS_FALSE,
+          \ 'canBePoly': g:self#IS_FALSE,
+          \ 'tagValue': a:tagValue,
+          \ 'tagText': ''
+          \ }
+  return s:newLeafTag(attrs)
 endfunction
 
 " --------------------------------------------------------
-" newSerialTag
+" s:newSerialTag: {{{2
 "   Constructor for a serail leaf object.
+"  parameters:
 "     @serial value  (field-description|include|exclude)? 
 "     tagName:    serial
 "     hasValue:   false
@@ -1839,12 +1743,21 @@ endfunction
 "     tagText:    arg
 " --------------------------------------------------------
 function! s:newSerialTag(tagText)
-  return s:newLeafTag('serial', s:IS_FALSE, s:IS_TRUE, s:IS_FALSE, '', a:tagText)
+  let attrs = {
+          \ 'tagName': 'serial',
+          \ 'hasValue': g:self#IS_FALSE,
+          \ 'hasText': g:self#IS_TRUE,
+          \ 'canBePoly': g:self#IS_FALSE,
+          \ 'tagValue': '',
+          \ 'tagText': a:tagText
+          \ }
+  return s:newLeafTag(attrs)
 endfunction
 
 " --------------------------------------------------------
-" newSerialFieldTag
+" s:newSerialFieldTag: {{{2
 "   Constructor for a serailField leaf object.
+"  parameters:
 "     @serialField value text ( field-name field-type field-description?)
 "     tagName:    serialField
 "     hasValue:   true
@@ -1854,12 +1767,21 @@ endfunction
 "     tagText:    arg
 " --------------------------------------------------------
 function! s:newSerialFieldTag(tagValue, tagText)
-  return s:newLeafTag('serialField', s:IS_TRUE, s:IS_TRUE, s:IS_FALSE, a:tagValue, a:tagText)
+  let attrs = {
+          \ 'tagName': 'serialField',
+          \ 'hasValue': g:self#IS_TRUE,
+          \ 'hasText': g:self#IS_TRUE,
+          \ 'canBePoly': g:self#IS_FALSE,
+          \ 'tagValue': a:tagValue,
+          \ 'tagText': a:tagText
+          \ }
+  return s:newLeafTag(attrs)
 endfunction
 
 " --------------------------------------------------------
-" newSerialDataTag
+" s:newSerialDataTag: {{{2
 "   Constructor for a serailData leaf object.
+"  parameters:
 "     In Java this is ONLY used when documenting a writeObject method
 "     @serialData text (data-description?)
 "     tagName:    serialData
@@ -1870,12 +1792,21 @@ endfunction
 "     tagText:    arg
 " --------------------------------------------------------
 function! s:newSerialDataTag(tagValue, tagText)
-  return s:newLeafTag('serialData', s:IS_FALSE, s:IS_TRUE, s:IS_FALSE, '', a:tagText)
+  let attrs = {
+          \ 'tagName': 'serialData',
+          \ 'hasValue': g:self#IS_FALSE,
+          \ 'hasText': g:self#IS_TRUE,
+          \ 'canBePoly': g:self#IS_FALSE,
+          \ 'tagValue': a:tagValue,
+          \ 'tagText': a:tagText
+          \ }
+  return s:newLeafTag(attrs)
 endfunction
 
 " --------------------------------------------------------
-" newDeprecatedTag
+" s:newDeprecatedTag: {{{2
 "   Constructor for a deprecated leaf object.
+"  parameters:
 "     @deprecated text 
 "     tagName:    deprecated
 "     hasValue:   false
@@ -1885,12 +1816,21 @@ endfunction
 "     tagText:    arg
 " --------------------------------------------------------
 function! s:newDeprecatedTag(tagText)
-  return s:newLeafTag('deprecated', s:IS_FALSE, s:IS_TRUE, s:IS_FALSE, '', a:tagText)
+  let attrs = {
+          \ 'tagName': 'deprecated',
+          \ 'hasValue': g:self#IS_FALSE,
+          \ 'hasText': g:self#IS_TRUE,
+          \ 'canBePoly': g:self#IS_FALSE,
+          \ 'tagValue': '',
+          \ 'tagText': a:tagText
+          \ }
+  return s:newLeafTag(attrs)
 endfunction
 
 " --------------------------------------------------------
-" newUnknownTag
+" s:newUnknownTag: {{{2
 "   Constructor for an unknown leaf object.
+"  parameters:
 "     @tagName text - unknown tag
 "     tagName:    arg
 "     hasValue:   false
@@ -1908,7 +1848,15 @@ function! s:newUnknownTag(tagName, tagValue, tagText)
       let text = a:tagValue . ' ' . text
     endif
   endif
-  return s:newLeafTag(a:tagName, s:IS_FALSE, s:IS_TRUE, s:IS_TRUE, '', text)
+  let attrs = {
+          \ 'tagName': a:tagName,
+          \ 'hasValue': g:self#IS_FALSE,
+          \ 'hasText': g:self#IS_TRUE,
+          \ 'canBePoly': g:self#IS_TRUE,
+          \ 'tagValue': '',
+          \ 'tagText': text
+          \ }
+  return s:newLeafTag(attrs)
 endfunction
 
 
@@ -1924,8 +1872,9 @@ endfunction
 
 
 " --------------------------------------------------------
-" newUserTag
+" s:newUserTag: {{{2
 "   Constructor for an user leaf object.
+"  parameters:
 "     @tag value? text?
 "     @tagName value? text? - user tag
 "     tagName:    arg
@@ -1953,12 +1902,21 @@ function! s:newUserTag(tagName, hasValue, hasText,  canBePoly, tagValue, tagText
     let value = ''
   endif
 
-  return s:newLeafTag(a:tagName, a:hasValue, a:hasText,  a:canBePoly, value, text)
+  let attrs = {
+          \ 'tagName': a:tagName,
+          \ 'hasValue': a:hasValue,
+          \ 'hasText': a:hasText,
+          \ 'canBePoly': a:canBePoly,
+          \ 'tagValue': value,
+          \ 'tagText': text
+          \ }
+  return s:newLeafTag(attrs)
 endfunction
 
 " --------------------------------------------------------
 " CreateTag
 "   Create a tag given its name and optional value ant text
+"  parameters:
 " --------------------------------------------------------
 function! s:CreateTag(tagName, tagValue, tagText) 
   let l:tagName = a:tagName
@@ -2064,20 +2022,21 @@ endfunction
 
 
 
-" ********************************************
-" START Entity Prototypes
-" ********************************************
-
-" Entity Interface Prototype
-function! s:loadAbstractEntityPrototype()
-  if s:IN_DEVELOPMENT_MODE
-    if exists("s:AbstractEntityPrototype")
-      unlet s:AbstractEntityPrototype
-    endif
+" --------------------------------------------------------
+" s:loadAbstractEntityPrototype: {{{2
+"   Entity Interface Prototype
+"  parameters: None
+" --------------------------------------------------------
+if g:self#IN_DEVELOPMENT_MODE
+  if exists("s:AbstractEntityPrototype")
+    unlet s:AbstractEntityPrototype
   endif
+endif
+function! s:loadAbstractEntityPrototype()
   if !exists("s:AbstractEntityPrototype")
-    let s:AbstractEntityPrototype = g:loadObjectPrototype().create()
-    let s:AbstractEntityPrototype._type = 'AbstractEntityPrototype'
+    " let s:AbstractEntityPrototype = g:loadObjectPrototype().create()
+    " let s:AbstractEntityPrototype._type = 'AbstractEntityPrototype'
+    let s:AbstractEntityPrototype = self#LoadObjectPrototype().clone('AbstractEntity')
     let s:AbstractEntityPrototype.__standardTags = []
     let s:AbstractEntityPrototype.__name = ''
 
@@ -2122,8 +2081,8 @@ function! s:loadAbstractEntityPrototype()
     function! s:AbstractEntityPrototype.__makeTParamDict(str, startPos) dict
       let argDict = {}
       let argDict.str = a:str
-      let argDict.atTop = s:IS_TRUE
-      let argDict.topOnly = b:scommenter_top_level_tparams_only 
+      let argDict.atTop = g:self#IS_TRUE
+      let argDict.topOnly = g:scommenter_top_level_tparams_only 
       let argDict.tparams = []
       let argDict.startPos = a:startPos
       let argDict.endPos = -1
@@ -2137,10 +2096,10 @@ function! s:loadAbstractEntityPrototype()
       let atTop = argDict.atTop
       let currentPos = argDict.startPos
       let len = strlen(str)
-      if argDict.topOnly == s:IS_TRUE
+      if argDict.topOnly == g:self#IS_TRUE
         let addParam = atTop
       else
-        let addParam = s:IS_TRUE
+        let addParam = g:self#IS_TRUE
       endif
 
       let c = strpart(str, currentPos, 1)
@@ -2152,7 +2111,7 @@ function! s:loadAbstractEntityPrototype()
 
         while c != ']' && currentPos < len 
             if c == '['
-              let argDict.atTop = s:IS_FALSE
+              let argDict.atTop = g:self#IS_FALSE
 
               " TODO: is this needed
               let argDict.startPos = currentPos
@@ -2182,7 +2141,7 @@ function! s:loadAbstractEntityPrototype()
                 endif
               endif
 
-            elseif c == ',' && addParam == s:IS_TRUE
+            elseif c == ',' && addParam == g:self#IS_TRUE
               let tparamStr = s:Trim(strpart(str, startTParam, currentPos - startTParam))
               let c = strpart(tparamStr, 0, 1)
               if c != '['
@@ -2202,7 +2161,7 @@ function! s:loadAbstractEntityPrototype()
 
         let tparamStr = s:Trim(strpart(str, startTParam, currentPos - startTParam))
         let c = strpart(tparamStr, 0, 1)
-        if c != '[' && addParam == s:IS_TRUE
+        if c != '[' && addParam == g:self#IS_TRUE
           let tparamName = substitute(tparamStr, '^[+\|-]\?\([^<\|>]\+\).*', '\1', '')
           let tparamName = s:Trim(tparamName)
           if tparamName != ''
@@ -2236,7 +2195,7 @@ function! s:loadAbstractEntityPrototype()
     function! s:AbstractEntityPrototype.__makeParamDict(str, startPos) dict
       let argDict = {}
       let argDict.str = a:str
-      let argDict.atTop = s:IS_TRUE
+      let argDict.atTop = g:self#IS_TRUE
       let argDict.params = []
       let argDict.startPos = a:startPos
       let argDict.endPos = -1
@@ -2259,7 +2218,7 @@ function! s:loadAbstractEntityPrototype()
 
         while c != ')' && currentPos < len 
             if c == '('
-              let argDict.atTop = s:IS_FALSE
+              let argDict.atTop = g:self#IS_FALSE
               let argDict.startPos = currentPos
     
               call self.__scanParam(argDict)
@@ -2267,7 +2226,7 @@ function! s:loadAbstractEntityPrototype()
               let argDict.atTop = atTop
               let currentPos = argDict.endPos
 
-            elseif c == ',' && atTop == s:IS_TRUE && bracketDepth == 0
+            elseif c == ',' && atTop == g:self#IS_TRUE && bracketDepth == 0
               let pstr = s:Trim(strpart(str, startParam, currentPos - startParam))
               let paramInfo = substitute(pstr, '\([^:]*\).*', '\1', '')
               let paramName = substitute(paramInfo, '\(\S\+\s\+\)*\s*\(\S\+\)\s*', '\2', '')
@@ -2285,7 +2244,7 @@ function! s:loadAbstractEntityPrototype()
             let c = strpart(str, currentPos, 1)
         endwhile
 
-        if atTop == s:IS_TRUE
+        if atTop == g:self#IS_TRUE
           let pstr = s:Trim(strpart(str, startParam, currentPos - startParam))
           if pstr != ''
             let paramInfo = substitute(pstr, '\([^:]*\).*', '\1', '')
@@ -2351,15 +2310,15 @@ function! s:loadAbstractEntityPrototype()
           let deletedTags = []
           for oldTag in l:oldTagList
             let oldTagValue = oldTag.getValue()
-            let found = s:IS_FALSE
+            let found = g:self#IS_FALSE
             for newTag in l:newTagList
               let newTagValue = newTag.getValue()
               if oldTagValue == newTagValue
-                let found = s:IS_TRUE
+                let found = g:self#IS_TRUE
                 break
               endif
             endfor
-            if found == s:IS_FALSE
+            if found == g:self#IS_FALSE
               call add(deletedTags, oldTag)
             endif
           endfor
@@ -2414,8 +2373,8 @@ function! s:loadAbstractEntityPrototype()
       let l:commentTagsSet = l:info.comment.tagsSet
 
       let key = 'since'
-      if exists('b:scommenter_since_release')
-        let sinceValue = b:scommenter_since_release
+      if exists('g:scommenter_since_release')
+        let sinceValue = g:scommenter_since_release
         if ! l:commentTagsSet.hasKey(key)
           let sinceTag = s:newSinceTag(sinceValue)
           call l:commentTagsSet.append(sinceTag)
@@ -2428,16 +2387,16 @@ function! s:loadAbstractEntityPrototype()
       let l:commentTagsSet = l:info.comment.tagsSet
 
       let key = 'author'
-      if exists('b:scommenter_class_author')
-        let authorValue = b:scommenter_class_author
-        let found = s:IS_FALSE
+      if exists('g:scommenter_class_author')
+        let authorValue = g:scommenter_class_author
+        let found = g:self#IS_FALSE
         for authorTag in l:commentTagsSet.toList(key)
           if authorTag.getValue() == authorValue
-            let found = s:IS_TRUE
+            let found = g:self#IS_TRUE
             break
           endif
         endfor
-        if found == s:IS_FALSE
+        if found == g:self#IS_FALSE
           let authorTag = s:newAuthorTag(authorValue)
           call l:commentTagsSet.append(authorTag)
         endif
@@ -2449,8 +2408,8 @@ function! s:loadAbstractEntityPrototype()
       let l:commentTagsSet = l:info.comment.tagsSet
 
       let key = 'version'
-      if exists('b:scommenter_class_version')
-        let versionValue = b:scommenter_class_version
+      if exists('g:scommenter_class_version')
+        let versionValue = g:scommenter_class_version
         if ! l:commentTagsSet.hasKey(key)
           let versionTag = s:newVersionTag(versionValue)
           call l:commentTagsSet.append(versionTag)
@@ -2489,18 +2448,22 @@ function! s:loadAbstractEntityPrototype()
   return s:AbstractEntityPrototype
 endfunction
 
-function! s:loadInnerClassEntityPrototype()
-  if s:IN_DEVELOPMENT_MODE
-    if exists("s:InnerClassEntityPrototype")
-      unlet s:InnerClassEntityPrototype
-    endif
+" --------------------------------------------------------
+" s:loadInnerObjectEntityPrototype: {{{2
+"  parameters: None
+" --------------------------------------------------------
+if g:self#IN_DEVELOPMENT_MODE
+  if exists("s:InnerClassEntityPrototype")
+    unlet s:InnerClassEntityPrototype
   endif
+endif
+function! s:loadInnerClassEntityPrototype()
   if !exists("s:InnerClassEntityPrototype")
-    let s:InnerClassEntityPrototype = s:loadAbstractEntityPrototype().create()
+    let s:InnerClassEntityPrototype = s:loadAbstractEntityPrototype().clone()
     let s:InnerClassEntityPrototype._type = 'InnerClassEntityPrototype'
 
-    function! s:InnerClassEntityPrototype.create() dict
-      let l:o = g:ObjectPrototype._create(self)
+    function! s:InnerClassEntityPrototype.clone() dict
+      let l:o = g:ObjectPrototype._clone(self)
       let l:o.__standardTags = [ 'param', 'tparam', 'throws', 'serial', 'see', 'deprecated' ]
       return l:o
     endfunction
@@ -2557,8 +2520,8 @@ function! s:loadInnerClassEntityPrototype()
        "  call self.__processParams(l:info, str, 0)
       " endif
 
-      if exists('b:scommenter_since_release')
-        let sinceTag = s:newSinceTag(b:scommenter_since_release)
+      if exists('g:scommenter_since_release')
+        let sinceTag = s:newSinceTag(g:scommenter_since_release)
         call l:info.getTagsSet().append(sinceTag)
       endif
     endfunction
@@ -2567,27 +2530,26 @@ function! s:loadInnerClassEntityPrototype()
   return s:InnerClassEntityPrototype
 endfunction
 function! s:newInnerClassEntity()
-  let l:o = s:loadInnerClassEntityPrototype().create()
+  let l:o = s:loadInnerClassEntityPrototype().clone()
   return l:o
 endfunction
 
 
-
-function! s:loadInnerTraitEntityPrototype()
-  if s:IN_DEVELOPMENT_MODE
-    if exists("s:InnerTraitEntityPrototype")
-      unlet s:InnerTraitEntityPrototype
-    endif
+" --------------------------------------------------------
+" s:loadInnerTraitEntityPrototype: {{{2
+"  parameters: None
+" --------------------------------------------------------
+if g:self#IN_DEVELOPMENT_MODE
+  if exists("s:InnerTraitEntityPrototype")
+    unlet s:InnerTraitEntityPrototype
   endif
+endif
+function! s:loadInnerTraitEntityPrototype()
   if !exists("s:InnerTraitEntityPrototype")
-    let s:InnerTraitEntityPrototype = s:loadAbstractEntityPrototype().create()
-    let s:InnerTraitEntityPrototype._type = 'InnerTraitEntityPrototype'
-
-    function! s:InnerTraitEntityPrototype.create() dict
-      let l:o = g:ObjectPrototype._create(self)
-      let l:o.__standardTags = [ 'tparam', 'see', 'deprecated' ]
-      return l:o
-    endfunction
+    " let s:InnerTraitEntityPrototype = s:loadAbstractEntityPrototype().clone()
+    " let s:InnerTraitEntityPrototype._type = 'InnerTraitEntityPrototype'
+    let s:InnerTraitEntityPrototype = s:loadAbstractEntityPrototype().clone('InnerTraitEntity')
+    let s:InnerTraitEntityPrototype.__standardTags = ['tparam', 'see', 'deprecated']
 
     function! s:InnerTraitEntityPrototype.getClassType() dict
       return s:INNER_TRAIT_TYPE
@@ -2625,8 +2587,8 @@ function! s:loadInnerTraitEntityPrototype()
         let str = substitute(str, '\s*\(.*\)', '\1', '')
       endif
 
-      if exists('b:scommenter_since_release')
-        let sinceTag = s:newSinceTag(b:scommenter_since_release)
+      if exists('g:scommenter_since_release')
+        let sinceTag = s:newSinceTag(g:scommenter_since_release)
         call l:info.getTagsSet().append(sinceTag)
       endif
     endfunction
@@ -2635,26 +2597,26 @@ function! s:loadInnerTraitEntityPrototype()
   return s:InnerTraitEntityPrototype
 endfunction
 function! s:newInnerTraitEntity()
-  let l:o = s:loadInnerTraitEntityPrototype().create()
+  let l:o = s:loadInnerTraitEntityPrototype().clone()
   return l:o
 endfunction
 
 
-function! s:loadInnerObjectEntityPrototype()
-  if s:IN_DEVELOPMENT_MODE
-    if exists("s:InnerObjectEntityPrototype")
-      unlet s:InnerObjectEntityPrototype
-    endif
+" --------------------------------------------------------
+" s:loadInnerObjectEntityPrototype: {{{2
+"  parameters: None
+" --------------------------------------------------------
+if g:self#IN_DEVELOPMENT_MODE
+  if exists("s:InnerObjectEntityPrototype")
+    unlet s:InnerObjectEntityPrototype
   endif
+endif
+function! s:loadInnerObjectEntityPrototype()
   if !exists("s:InnerObjectEntityPrototype")
-    let s:InnerObjectEntityPrototype = s:loadAbstractEntityPrototype().create()
-    let s:InnerObjectEntityPrototype._type = 'InnerObjectEntityPrototype'
-
-    function! s:InnerObjectEntityPrototype.create() dict
-      let l:o = g:ObjectPrototype._create(self)
-      let l:o.__standardTags = [ 'see', 'deprecated' ]
-      return l:o
-    endfunction
+    " let s:InnerObjectEntityPrototype = s:loadAbstractEntityPrototype().clone()
+    " let s:InnerObjectEntityPrototype._type = 'InnerObjectEntityPrototype'
+    let s:InnerObjectEntityPrototype = s:loadAbstractEntityPrototype().clone('InnerObjectEntity')
+    let s:InnerObjectEntityPrototype.__standardTags = ['see', 'deprecated']
 
     function! s:InnerObjectEntityPrototype.getClassType() dict
       return s:INNER_CLASS_TYPE
@@ -2680,8 +2642,8 @@ function! s:loadInnerObjectEntityPrototype()
       "let l:info.entity = l:m[1]
       call l:info.entity.setName(l:m[1])
 
-      if exists('b:scommenter_since_release')
-        let sinceTag = s:newSinceTag(b:scommenter_since_release)
+      if exists('g:scommenter_since_release')
+        let sinceTag = s:newSinceTag(g:scommenter_since_release)
         call l:info.getTagsSet().append(sinceTag)
       endif
     endfunction
@@ -2690,26 +2652,26 @@ function! s:loadInnerObjectEntityPrototype()
   return s:InnerObjectEntityPrototype
 endfunction
 function! s:newInnerObjectEntity()
-  let l:o = s:loadInnerObjectEntityPrototype().create()
+  let l:o = s:loadInnerObjectEntityPrototype().clone()
   return l:o
 endfunction
 
 
-function! s:loadClassEntityPrototype()
-  if s:IN_DEVELOPMENT_MODE
-    if exists("s:ClassEntityPrototype")
-      unlet s:ClassEntityPrototype
-    endif
+" --------------------------------------------------------
+" s:loadClassEntityPrototype: {{{2
+"  parameters: None
+" --------------------------------------------------------
+if g:self#IN_DEVELOPMENT_MODE
+  if exists("s:ClassEntityPrototype")
+    unlet s:ClassEntityPrototype
   endif
+endif
+function! s:loadClassEntityPrototype()
   if !exists("s:ClassEntityPrototype")
-    let s:ClassEntityPrototype = s:loadAbstractEntityPrototype().create()
-    let s:ClassEntityPrototype._type = 'ClassEntityPrototype'
-
-    function! s:ClassEntityPrototype.create() dict
-      let l:o = g:ObjectPrototype._create(self)
-      let l:o.__standardTags = [ 'author', 'version', 'param', 'tparam', 'throws', 'since', 'serial', 'see', 'deprecated' ]
-      return l:o
-    endfunction
+    " let s:ClassEntityPrototype = s:loadAbstractEntityPrototype().clone()
+    " let s:ClassEntityPrototype._type = 'ClassEntityPrototype'
+    let s:ClassEntityPrototype = s:loadAbstractEntityPrototype().clone('ClassEntity')
+    let s:ClassEntityPrototype.__standardTags = [ 'author', 'version', 'param', 'tparam', 'throws', 'since', 'serial', 'see', 'deprecated' ]
 
     function! s:ClassEntityPrototype.getClassType() dict
       return s:CLASS_TYPE
@@ -2746,16 +2708,16 @@ function! s:loadClassEntityPrototype()
       call l:info.entity.setName(l:m[1])
       let str = l:m[2]
 
-      if exists('b:scommenter_class_author')
-        let authorTag = s:newAuthorTag(b:scommenter_class_author)
+      if exists('g:scommenter_class_author')
+        let authorTag = s:newAuthorTag(g:scommenter_class_author)
         call l:info.getTagsSet().append(authorTag)
       endif
-      if exists('b:scommenter_class_version')
-        let versionTag = s:newVersionTag(b:scommenter_class_version)
+      if exists('g:scommenter_class_version')
+        let versionTag = s:newVersionTag(g:scommenter_class_version)
         call l:info.getTagsSet().append(versionTag)
       endif
-      if exists('b:scommenter_since_release')
-        let sinceTag = s:newSinceTag(b:scommenter_since_release)
+      if exists('g:scommenter_since_release')
+        let sinceTag = s:newSinceTag(g:scommenter_since_release)
         call l:info.getTagsSet().append(sinceTag)
       endif
 
@@ -2776,27 +2738,26 @@ function! s:loadClassEntityPrototype()
   return s:ClassEntityPrototype
 endfunction
 function! s:newClassEntity()
-  let l:o = s:loadClassEntityPrototype().create()
+  let l:o = s:loadClassEntityPrototype().clone()
   return l:o
 endfunction
 
 
-function! s:loadTraitEntityPrototype()
-  if s:IN_DEVELOPMENT_MODE
-    if exists("s:TraitEntityPrototype")
-      unlet s:TraitEntityPrototype
-    endif
+" --------------------------------------------------------
+" s:loadTraitEntityPrototype: {{{2
+"  parameters: None
+" --------------------------------------------------------
+if g:self#IN_DEVELOPMENT_MODE
+  if exists("s:TraitEntityPrototype")
+    unlet s:TraitEntityPrototype
   endif
+endif
+function! s:loadTraitEntityPrototype()
   if !exists("s:TraitEntityPrototype")
-    let s:TraitEntityPrototype = s:loadAbstractEntityPrototype().create()
-    let s:TraitEntityPrototype._type = 'TraitEntityPrototype'
-
-    function! s:TraitEntityPrototype.create() dict
-      let l:o = g:ObjectPrototype._create(self)
-      let l:o.__standardTags = [ 'author', 'version', 'tparam', 'since', 'see', 'deprecated' ]
-      return l:o
-    endfunction
-
+    " let s:TraitEntityPrototype = s:loadAbstractEntityPrototype().create()
+    " let s:TraitEntityPrototype._type = 'TraitEntityPrototype'
+    let s:TraitEntityPrototype = s:loadAbstractEntityPrototype().clone('TraitEntity')
+    let s:TraitEntityPrototype.__standardTags = [ 'author', 'version', 'tparam', 'since', 'see', 'deprecated' ]
 
     function! s:TraitEntityPrototype.getClassType() dict
       return s:TRAIT_TYPE
@@ -2829,16 +2790,16 @@ function! s:loadTraitEntityPrototype()
 
       let str = l:m[2]
 
-      if exists('b:scommenter_class_author')
-        let authorTag = s:newAuthorTag(b:scommenter_class_author)
+      if exists('g:scommenter_class_author')
+        let authorTag = s:newAuthorTag(g:scommenter_class_author)
         call l:info.getTagsSet().append(authorTag)
       endif
-      if exists('b:scommenter_class_version')
-        let versionTag = s:newVersionTag(b:scommenter_class_version)
+      if exists('g:scommenter_class_version')
+        let versionTag = s:newVersionTag(g:scommenter_class_version)
         call l:info.getTagsSet().append(versionTag)
       endif
-      if exists('b:scommenter_since_release')
-        let sinceTag = s:newSinceTag(b:scommenter_since_release)
+      if exists('g:scommenter_since_release')
+        let sinceTag = s:newSinceTag(g:scommenter_since_release)
         call l:info.getTagsSet().append(sinceTag)
       endif
 
@@ -2855,26 +2816,26 @@ function! s:loadTraitEntityPrototype()
   return s:TraitEntityPrototype
 endfunction
 function! s:newTraitEntity()
-  let l:o = s:loadTraitEntityPrototype().create()
+  let l:o = s:loadTraitEntityPrototype().clone()
   return l:o
 endfunction
 
 
-function! s:loadObjectEntityPrototype()
-  if s:IN_DEVELOPMENT_MODE
-    if exists("s:ObjectEntityPrototype")
-      unlet s:ObjectEntityPrototype
-    endif
+" --------------------------------------------------------
+" s:loadObjectEntityPrototype: {{{2
+"  parameters: None
+" --------------------------------------------------------
+if g:self#IN_DEVELOPMENT_MODE
+  if exists("s:ObjectEntityPrototype")
+    unlet s:ObjectEntityPrototype
   endif
+endif
+function! s:loadObjectEntityPrototype()
   if !exists("s:ObjectEntityPrototype")
-    let s:ObjectEntityPrototype = s:loadAbstractEntityPrototype().create()
-    let s:ObjectEntityPrototype._type = 'ObjectEntityPrototype'
-
-    function! s:ObjectEntityPrototype.create() dict
-      let l:o = g:ObjectPrototype._create(self)
-      let l:o.__standardTags = [ 'author', 'version', 'since', 'see', 'deprecated' ]
-      return l:o
-    endfunction
+    " let s:ObjectEntityPrototype = s:loadAbstractEntityPrototype().create()
+    " let s:ObjectEntityPrototype._type = 'ObjectEntityPrototype'
+    let s:ObjectEntityPrototype = s:loadAbstractEntityPrototype().clone('ObjectEntity')
+    let s:ObjectEntityPrototype.__standardTags = [ 'author', 'version', 'since', 'see', 'deprecated' ]
 
     function! s:ObjectEntityPrototype.getClassType() dict
       return s:OBJECT_TYPE
@@ -2904,16 +2865,16 @@ function! s:loadObjectEntityPrototype()
 
       let str = l:m[2]
 
-      if exists('b:scommenter_class_author')
-        let authorTag = s:newAuthorTag(b:scommenter_class_author)
+      if exists('g:scommenter_class_author')
+        let authorTag = s:newAuthorTag(g:scommenter_class_author)
         call l:info.getTagsSet().append(authorTag)
       endif
-      if exists('b:scommenter_class_version')
-        let versionTag = s:newVersionTag(b:scommenter_class_version)
+      if exists('g:scommenter_class_version')
+        let versionTag = s:newVersionTag(g:scommenter_class_version)
         call l:info.getTagsSet().append(versionTag)
       endif
-      if exists('b:scommenter_since_release')
-        let sinceTag = s:newSinceTag(b:scommenter_since_release)
+      if exists('g:scommenter_since_release')
+        let sinceTag = s:newSinceTag(g:scommenter_since_release)
         call l:info.getTagsSet().append(sinceTag)
       endif
     endfunction
@@ -2922,25 +2883,25 @@ function! s:loadObjectEntityPrototype()
   return s:ObjectEntityPrototype
 endfunction
 function! s:newObjectEntity()
-  let l:o = s:loadObjectEntityPrototype().create()
+  let l:o = s:loadObjectEntityPrototype().clone()
   return l:o
 endfunction
 
-function! s:loadMethodEntityPrototype()
-  if s:IN_DEVELOPMENT_MODE
-    if exists("s:MethodEntityPrototype")
-      unlet s:MethodEntityPrototype
-    endif
+" --------------------------------------------------------
+" s:loadMethodEntityPrototype: {{{2
+"  parameters: None
+" --------------------------------------------------------
+if g:self#IN_DEVELOPMENT_MODE
+  if exists("s:MethodEntityPrototype")
+    unlet s:MethodEntityPrototype
   endif
+endif
+function! s:loadMethodEntityPrototype()
   if !exists("s:MethodEntityPrototype")
-    let s:MethodEntityPrototype = s:loadAbstractEntityPrototype().create()
-    let s:MethodEntityPrototype._type = 'MethodEntityPrototype'
-
-    function! s:MethodEntityPrototype.create() dict
-      let l:o = g:ObjectPrototype._create(self)
-      let l:o.__standardTags = [ 'param', 'tparam', 'return', 'throws', 'since', 'see', 'deprecated' ]
-      return l:o
-    endfunction
+    " let s:MethodEntityPrototype = s:loadAbstractEntityPrototype().create()
+    " let s:MethodEntityPrototype._type = 'MethodEntityPrototype'
+    let s:MethodEntityPrototype = s:loadAbstractEntityPrototype().clone('MethodEntity')
+    let s:MethodEntityPrototype.__standardTags = [ 'param', 'tparam', 'return', 'throws', 'since', 'see', 'deprecated' ]
 
     function! s:MethodEntityPrototype.getClassType() dict
       return s:METHOD_TYPE
@@ -3057,19 +3018,19 @@ function! s:loadMethodEntityPrototype()
             endif
           else
             " boolean return value, i.e.,  def isFoo = foo or def hasFoo = foo
-            let found = s:IS_FALSE
+            let found = g:self#IS_FALSE
             for bname in g:booleanNames
               let mpos = match(method_name, bname)
               if mpos == 0
                 let returnTag = s:newReturnTag('Boolean ' . strpart(method_name, len(bname)))
                 let tags = l:info.getTagsSet()
                 call tags.append(returnTag)
-                let found = s:IS_TRUE
+                let found = g:self#IS_TRUE
                 break
               endif
             endfor
 
-            if found == s:IS_FALSE
+            if found == g:self#IS_FALSE
               let returnTag = s:newReturnTag('Unknown')
               let tags = l:info.getTagsSet()
               call tags.append(returnTag)
@@ -3084,26 +3045,26 @@ function! s:loadMethodEntityPrototype()
   return s:MethodEntityPrototype
 endfunction
 function! s:newMethodEntity()
-  let l:o = s:loadMethodEntityPrototype().create()
+  let l:o = s:loadMethodEntityPrototype().clone()
   return l:o
 endfunction
 
 
-function! s:loadFieldEntityPrototype()
-  if s:IN_DEVELOPMENT_MODE
-    if exists("s:FieldEntityPrototype")
-      unlet s:FieldEntityPrototype
-    endif
+" --------------------------------------------------------
+" s:loadFieldEntityPrototype: {{{2
+"  parameters: None
+" --------------------------------------------------------
+if g:self#IN_DEVELOPMENT_MODE
+  if exists("s:FieldEntityPrototype")
+    unlet s:FieldEntityPrototype
   endif
+endif
+function! s:loadFieldEntityPrototype()
   if !exists("s:FieldEntityPrototype")
-    let s:FieldEntityPrototype = s:loadAbstractEntityPrototype().create()
-    let s:FieldEntityPrototype._type = 'FieldEntityPrototype'
-
-    function! s:FieldEntityPrototype.create() dict
-      let l:o = g:ObjectPrototype._create(self)
-      let l:o.__standardTags = [ 'serial', 'serialField', 'since', 'see', 'deprecated' ]
-      return l:o
-    endfunction
+    " let s:FieldEntityPrototype = s:loadAbstractEntityPrototype().create()
+    " let s:FieldEntityPrototype._type = 'FieldEntityPrototype'
+    let s:FieldEntityPrototype = s:loadAbstractEntityPrototype().clone('FieldEntity')
+    let s:FieldEntityPrototype.__standardTags = [ 'serial', 'serialField', 'since', 'see', 'deprecated' ]
 
     function! s:FieldEntityPrototype.getClassType() dict
       return s:FIELD_TYPE
@@ -3121,7 +3082,7 @@ function! s:loadFieldEntityPrototype()
   return s:FieldEntityPrototype
 endfunction
 function! s:newFieldEntity()
-  let l:o = s:loadFieldEntityPrototype().create()
+  let l:o = s:loadFieldEntityPrototype().clone()
   return l:o
 endfunction
 
@@ -3132,7 +3093,7 @@ endfunction
 
 
 " --------------------------------------------------------
-" GetEntity
+" GetEntity: {{{2
 "   Given a comment type, create an entity object.
 " --------------------------------------------------------
 function! s:GetEntity(ctype)
@@ -3169,12 +3130,12 @@ endfunction
 " ============================================================================
 
 " --------------------------------------------------------
-" ResetAll
+" ResetAll: {{{2
 "   Resets whatever needs resetting and checks if 
 "     initialization has occurred.
 " --------------------------------------------------------
 function! s:ResetAll()
-  if s:isInitialized == s:IS_FALSE
+  if s:isInitialized == g:self#IS_FALSE
     call s:Initialize()
   endif
 endfunction
@@ -3182,14 +3143,14 @@ endfunction
 " ++++++++++++++++++++++++++++++++++++++++++++
 " Has the script been initialized
 " ++++++++++++++++++++++++++++++++++++++++++++
-let s:isInitialized = s:IS_FALSE
+let s:isInitialized = g:self#IS_FALSE
 
 " --------------------------------------------------------
-" Initialize
+" Initialize: {{{2
 "   Initialization is done once.
 " --------------------------------------------------------
 function! s:Initialize()
-  if s:isInitialized == s:IS_FALSE
+  if s:isInitialized == g:self#IS_FALSE
     "-------------------------------------------
     " Initialized Description Space
     "   These MUST be in the order of the 
@@ -3198,7 +3159,7 @@ function! s:Initialize()
     call s:LoadDescriptionSpace()
     call s:CheckConfiguationParameterValues()
 
-    let s:isInitialized = s:IS_TRUE
+    let s:isInitialized = g:self#IS_TRUE
   endif
 
 endfunction
@@ -3209,7 +3170,7 @@ endfunction
 let g:descriptionSpaceList = []
 
 " --------------------------------------------------------
-" LoadDescriptionSpace
+" LoadDescriptionSpace: {{{2
 "   Load the descriptionSpaceList array
 " --------------------------------------------------------
 function! s:LoadDescriptionSpace()
@@ -3219,59 +3180,59 @@ function! s:LoadDescriptionSpace()
   call add(g:descriptionSpaceList, 0)
 
   " INNER_CLASS_TYPE
-  if exists("b:scommenter_inner_class_description_space")
-    call add(g:descriptionSpaceList, b:scommenter_inner_class_description_space)
+  if exists("g:scommenter_inner_class_description_space")
+    call add(g:descriptionSpaceList, g:scommenter_inner_class_description_space)
   else
     call add(g:descriptionSpaceList, s:defaultInnerClassDescriptionSpace)
   endif
 
   " INNER_TRAIT_TYPE
-  if exists("b:scommenter_inner_trait_description_space")
-    call add(g:descriptionSpaceList, b:scommenter_inner_trait_description_space)
+  if exists("g:scommenter_inner_trait_description_space")
+    call add(g:descriptionSpaceList, g:scommenter_inner_trait_description_space)
   else
     call add(g:descriptionSpaceList, s:defaultInnerTraitDescriptionSpace)
   endif
 
   " INNER_OBJECT_TYPE
-  if exists("b:scommenter_inner_object_description_space")
-    call add(g:descriptionSpaceList, b:scommenter_inner_object_description_space)
+  if exists("g:scommenter_inner_object_description_space")
+    call add(g:descriptionSpaceList, g:scommenter_inner_object_description_space)
   else
     call add(g:descriptionSpaceList, s:defaultInnerObjectDescriptionSpace)
   endif
 
   " CLASS_TYPE
-  if exists("b:scommenter_class_description_space")
-    call add(g:descriptionSpaceList, b:scommenter_class_description_space)
+  if exists("g:scommenter_class_description_space")
+    call add(g:descriptionSpaceList, g:scommenter_class_description_space)
   else
     call add(g:descriptionSpaceList, s:defaultClassDescriptionSpace)
   endif
 
   " TRAIT_TYPE
-  if exists("b:scommenter_trait_description_space")
-    call add(g:descriptionSpaceList, b:scommenter_trait_description_space)
+  if exists("g:scommenter_trait_description_space")
+    call add(g:descriptionSpaceList, g:scommenter_trait_description_space)
   else
     call add(g:descriptionSpaceList, s:defaultTraitDescriptionSpace)
   endif
 
   " OBJECT_TYPE
-  if exists("b:scommenter_object_description_space")
-    call add(g:descriptionSpaceList, b:scommenter_object_description_space)
+  if exists("g:scommenter_object_description_space")
+    call add(g:descriptionSpaceList, g:scommenter_object_description_space)
   else
     call add(g:descriptionSpaceList, s:defaultObjectDescriptionSpace)
   endif
 
   " METHOD_TYPE
-  if exists("b:scommenter_method_description_space")
-    call add(g:descriptionSpaceList, b:scommenter_method_description_space)
+  if exists("g:scommenter_method_description_space")
+    call add(g:descriptionSpaceList, g:scommenter_method_description_space)
   else
     call add(g:descriptionSpaceList, s:defaultMethodDescriptionSpace)
   endif
 
   " VAL_TYPE
   " VAR_TYPE
-  if exists("b:scommenter_field_description_space")
-    call add(g:descriptionSpaceList, b:scommenter_field_description_space)
-    call add(g:descriptionSpaceList, b:scommenter_field_description_space)
+  if exists("g:scommenter_field_description_space")
+    call add(g:descriptionSpaceList, g:scommenter_field_description_space)
+    call add(g:descriptionSpaceList, g:scommenter_field_description_space)
   else
     call add(g:descriptionSpaceList, s:defaultFieldDescriptionSpace)
     call add(g:descriptionSpaceList, s:defaultFieldDescriptionSpace)
@@ -3279,35 +3240,35 @@ function! s:LoadDescriptionSpace()
 endfunction
 
 " --------------------------------------------------------
-" CheckConfiguationParameterValues
+" CheckConfiguationParameterValues: {{{2
 "   Check if configuration parameters have valid values
 " --------------------------------------------------------
 function! s:CheckConfiguationParameterValues()
-  if exists("b:scommenter_extra_line_text_offset")
-    if b:scommenter_extra_line_text_offset > b:scommenter_page_width
-      let str = "Configuration parameter: b:scommenter_extra_line_text_offset"
-      let str = str . " with value: " b:scommenter_extra_line_text_offset
+  if exists("g:scommenter_extra_line_text_offset")
+    if g:scommenter_extra_line_text_offset > g:scommenter_page_width
+      let str = "Configuration parameter: g:scommenter_extra_line_text_offset"
+      let str = str . " with value: " g:scommenter_extra_line_text_offset
       let str = str . " is bigger than the page width: "
-      let str = str . b:scommenter_page_width
-      let str = str . " as defined by b:scommenter_page_width"
+      let str = str . g:scommenter_page_width
+      let str = str . " as defined by g:scommenter_page_width"
       throw str
     else 
-      let suggestedMax = b:scommenter_page_width - 50
-      if b:scommenter_extra_line_text_offset > suggestedMax
-        let str = "Configuration parameter: b:scommenter_extra_line_text_offset"
+      let suggestedMax = g:scommenter_page_width - 50
+      if g:scommenter_extra_line_text_offset > suggestedMax
+        let str = "Configuration parameter: g:scommenter_extra_line_text_offset"
         let str = str . " is rather large"
         call s:WarningMessage(str)
       endif
     endif
   endif
 
-  if exists("b:scommenter_user_tags")  
+  if exists("g:scommenter_user_tags")  
     " list of user third-party tags
     "    tagName
     "    hasValue
     "    hasText 
     "    canHaveMoreThanOne
-    for definition in b:scommenter_user_tags
+    for definition in g:scommenter_user_tags
       let len = len(definition)
       if len != 4
         let str = "Bad user defined tag: " . string(definition)
@@ -3337,27 +3298,27 @@ endfunction
 " ********************************************
 
 " --------------------------------------------------------
-" WriteFileComments
+" WriteFileComments: {{{2
 "   Write the top of file comment
 " --------------------------------------------------------
 function! s:WriteFileComments()
   let s:appendPos = 0
-  if exists("*SCommenter_OwnFileComments")
-    call SCommenter_OwnFileComments()
+  if exists("*ScalaCommenter_OwnFileComments")
+    call ScalaCommenter_OwnFileComments()
     return
   endif
 
-  if exists("b:scommenter_std_file_comments") && b:scommenter_std_file_comments
+  if exists("g:scommenter_std_file_comments") && g:scommenter_std_file_comments
     call s:StdFileComments()
     return
   endif
 
-  if exists("b:scommenter_scala_api_file_comments") && b:scommenter_scala_api_file_comments
+  if exists("g:scommenter_scala_api_file_comments") && g:scommenter_scala_api_file_comments
     call s:ScalaAPIFileComments()
     return
   endif
 
-  if exists("b:scommenter_sun_file_comments") && b:scommenter_sun_file_comments
+  if exists("g:scommenter_sun_file_comments") && g:scommenter_sun_file_comments
     call s:SunFileComments()
     return
   endif
@@ -3366,11 +3327,11 @@ function! s:WriteFileComments()
 endfunction
 
 " --------------------------------------------------------
-" StdFileComments
+" StdFileComments: {{{2
 "   Standard file comment
 " --------------------------------------------------------
 function! s:StdFileComments()
-  if exists("b:scommenter_file_noautotime") && b:scommenter_file_noautotime
+  if exists("g:scommenter_file_noautotime") && g:scommenter_file_noautotime
     let created = ''
   else
     let created = strftime("%c")
@@ -3380,19 +3341,19 @@ function! s:StdFileComments()
   let s:indent    = ''
   call s:AppendStr('/*')
   call s:AppendStr(' * file name  : ' . bufname("%"))
-  if exists("b:scommenter_file_author")
-    call s:AppendStr(' * authors    : ' . b:scommenter_file_author)
+  if exists("g:scommenter_file_author")
+    call s:AppendStr(' * authors    : ' . g:scommenter_file_author)
   endif
 
   call s:AppendStr(' * created    : ' . created)
 
-  if exists("b:scommenter_file_copyright_line")
-    call s:AppendStr(' * copyright  : ' . b:scommenter_file_copyright_line)
+  if exists("g:scommenter_file_copyright_line")
+    call s:AppendStr(' * copyright  : ' . g:scommenter_file_copyright_line)
   endif
 
-  if exists("b:scommenter_class_svn_id")
+  if exists("g:scommenter_class_svn_id")
     call s:AppendStr(' * ')
-    call s:AppendStr(' * ' .  b:scommenter_class_svn_id)
+    call s:AppendStr(' * ' .  g:scommenter_class_svn_id)
   endif
 
   call s:AppendStr(' *')
@@ -3402,7 +3363,7 @@ function! s:StdFileComments()
 endfunction  
 
 " --------------------------------------------------------
-" ScalaAPIFileComments
+" ScalaAPIFileComments: {{{2
 "   The Scala library file comment style
 " --------------------------------------------------------
 function! s:ScalaAPIFileComments()
@@ -3415,18 +3376,18 @@ function! s:ScalaAPIFileComments()
   call s:AppendStr('\*                                                                      */')
 
   call s:AppendStr('')
-  if exists("b:scommenter_class_svn_id")
-    call s:AppendStr('// ' .  b:scommenter_class_svn_id)
+  if exists("g:scommenter_class_svn_id")
+    call s:AppendStr('// ' .  g:scommenter_class_svn_id)
   endif
 endfunction  
 
 " --------------------------------------------------------
-" SunFileComments
+" SunFileComments: {{{2
 "   The Sun Java library file comment style
 " --------------------------------------------------------
 function! s:SunFileComments()
 
-  if exists("b:scommenter_file_noautotime") && b:scommenter_file_noautotime
+  if exists("g:scommenter_file_noautotime") && g:scommenter_file_noautotime
     let created = ''
   else
     let created = strftime("%y/%m/%d")
@@ -3439,16 +3400,16 @@ function! s:SunFileComments()
 
   call s:AppendStars(1)
 
-  let list_len = len(b:scommenter_file_copyright_list)
+  let list_len = len(g:scommenter_file_copyright_list)
   if list_len > 0
-    for line in b:scommenter_file_copyright_list
+    for line in g:scommenter_file_copyright_list
       call s:AppendStr(' * ' . line)
     endfor
   endif
 
-  if exists("b:scommenter_class_svn_id")
+  if exists("g:scommenter_class_svn_id")
     call s:AppendStr(' * ')
-    call s:AppendStr(' * ' .  b:scommenter_class_svn_id)
+    call s:AppendStr(' * ' .  g:scommenter_class_svn_id)
   endif
 
   call s:AppendStr(' * ')
@@ -3456,12 +3417,12 @@ function! s:SunFileComments()
 endfunction  
 
 " --------------------------------------------------------
-" DefaultFileComments
+" DefaultFileComments: {{{2
 "   Default file comment.
 " --------------------------------------------------------
 function! s:DefaultFileComments()
 
-  if exists("b:scommenter_file_noautotime") && b:scommenter_file_noautotime
+  if exists("g:scommenter_file_noautotime") && g:scommenter_file_noautotime
     let created = ''
   else
     let created = strftime("%d/%m/%y")
@@ -3474,16 +3435,16 @@ function! s:DefaultFileComments()
   call s:AppendStr(' * created: ' . created)
   call s:AppendStr(' * ')
 
-  let list_len = len(b:scommenter_file_copyright_list)
+  let list_len = len(g:scommenter_file_copyright_list)
   if list_len > 0
-    for line in b:scommenter_file_copyright_list
+    for line in g:scommenter_file_copyright_list
       call s:AppendStr(' * ' . line)
     endfor
   endif
 
-  if exists("b:scommenter_class_svn_id")
+  if exists("g:scommenter_class_svn_id")
     call s:AppendStr(' * ')
-    call s:AppendStr(' * ' .  b:scommenter_class_svn_id)
+    call s:AppendStr(' * ' .  g:scommenter_class_svn_id)
   endif
   call s:AppendStr(' * ')
 
@@ -3515,7 +3476,7 @@ let s:VAL_TYPE          = 8
 let s:VAR_TYPE          = 9
 
 " --------------------------------------------------------
-" GetCommentType
+" GetCommentType: {{{2
 "   Determine what entity (comment) type the cursor is 
 "     sitting on.
 " --------------------------------------------------------
@@ -3567,7 +3528,7 @@ endfunction
 "   dict.comment.tagsSet        Comment Tags Set
 
 " --------------------------------------------------------
-" UpdateAllTags
+" UpdateAllTags: {{{2
 "   Read existing comments, resolve existing comment tags
 "     with the entity's current tags, delete the existing
 "     comment and then write out the new comment (lines
@@ -3586,7 +3547,7 @@ function! s:UpdateAllTags(info)
   call s:DeleteExistingComment(l:info)
 
   " write /** (optional first line text)
-  call s:WriteCommentStart(l:info, l:info.comment.firstLineText)
+  call s:WriteCommentStart(l:info, l:info.comment.firstLineText, g:self#IS_FALSE)
 
   " write existing comment normal lines
   call s:WriteExistingCommentNormalLines(l:info)
@@ -3614,7 +3575,7 @@ let s:COMMENT_TAG_TEXT_STATE  = 2
 let s:COMMENT_TAG_EMPTY_STATE = 3 " empty line(s) between tags
 
 " --------------------------------------------------------
-" LoadExistingTags
+" LoadExistingTags: {{{2
 "   Read in a comment's existing comment lines and tags 
 "     from docCommentStart to docCommentEnd.
 " --------------------------------------------------------
@@ -3700,7 +3661,7 @@ endfunction
 
 
 " --------------------------------------------------------
-" DeleteExistingComment
+" DeleteExistingComment: {{{2
 "   Delete the comment lines from docComentStart to
 "     docCommentEnd.
 " --------------------------------------------------------
@@ -3710,7 +3671,7 @@ function! s:DeleteExistingComment(info)
 endfunction
 
 " --------------------------------------------------------
-" WriteExistingCommentNormalLines
+" WriteExistingCommentNormalLines: {{{2
 "   Write the existing, non-tag line comments.
 " --------------------------------------------------------
 function! s:WriteExistingCommentNormalLines(info) 
@@ -3728,7 +3689,7 @@ function! s:WriteExistingCommentNormalLines(info)
 endfunction
 
 " --------------------------------------------------------
-" WriteSpacingNormalLinesAndTags
+" WriteSpacingNormalLinesAndTags: {{{2
 "   Optionally write one or more lines between existing
 "     comment "normal lines" and the first tag line.
 "     If there are no normal lines for if there are no
@@ -3737,10 +3698,10 @@ endfunction
 function! s:WriteSpacingNormalLinesAndTags(info) 
   let l:info = a:info
 
-  if ! exists("b:scommenter_smart_description_spacing")
+  if ! exists("g:scommenter_smart_description_spacing")
     return
   endif
-  if b:scommenter_smart_description_spacing == s:IS_FALSE
+  if g:scommenter_smart_description_spacing == g:self#IS_FALSE
     return
   endif
 
@@ -3749,7 +3710,7 @@ function! s:WriteSpacingNormalLinesAndTags(info)
   endif
 
   " are there non-empty normal lines
-  let foundNormalLine = s:IS_FALSE
+  let foundNormalLine = g:self#IS_FALSE
 
   let len = len(info.comment.lineList) 
   let index = len - 1
@@ -3761,14 +3722,14 @@ function! s:WriteSpacingNormalLinesAndTags(info)
         " do not need to add one.
         return
       else
-        let foundNormalLine = s:IS_TRUE
+        let foundNormalLine = g:self#IS_TRUE
         break
       endif
     endif
     let index = index - 1
   endwhile
 
-  if foundNormalLine == s:IS_FALSE
+  if foundNormalLine == g:self#IS_FALSE
     " no normal lines
     return 
   endif
@@ -3787,14 +3748,14 @@ function! s:WriteSpacingNormalLinesAndTags(info)
 endfunction
 
 " --------------------------------------------------------
-" WriteCommentStart
+" WriteCommentStart: {{{2
 "   Write the start of the comment " /**" and optionally
 "     output the first line of comment text on the same
 "     line. This is NOT according to the JavaDoc standard
 "     but many, many ScalaDoc comments in the Scala
 "     base library do this.
 " --------------------------------------------------------
-function! s:WriteCommentStart(info, firstLineText)
+function! s:WriteCommentStart(info, firstLineText, firsttime)
   let l:info = a:info
   let s:appendPos = l:info.getDocCommentStart() - 1
 
@@ -3803,11 +3764,19 @@ function! s:WriteCommentStart(info, firstLineText)
   else
     call s:AppendStr('/**')
   endif
+
+  if a:firsttime == g:self#IS_TRUE
+    let i = info.getDescriptionSpace()
+    while i > 0
+      call s:AppendStr(' * ')
+      let i = i - 1
+    endwhile
+  endif
 endfunction
 
 
 " --------------------------------------------------------
-" WriteCommentEnd
+" WriteCommentEnd: {{{2
 "   Write the end of the comment " */" and optionally
 "     move the cursor to the top of the comment
 " --------------------------------------------------------
@@ -3827,7 +3796,7 @@ endfunction
 
 
 " --------------------------------------------------------
-" ProcessAnnotation
+" ProcessAnnotation: {{{2
 "   Scan all annotations above the entity. Record any
 "   @throws annotations.
 " --------------------------------------------------------
@@ -3884,14 +3853,14 @@ let s:DOC_COMMENT_TYPE_SINGLE_LINE = 1
 let s:DOC_COMMENT_TYPE_MULTI_LINE = 2
 
 " --------------------------------------------------------
-" HasDocComments
+" HasDocComments: {{{2
 "   Does the current entity have a ScalaDoc comment.
 " --------------------------------------------------------
 function! s:HasDocComments(info)
   let l:info = a:info
-  if s:HasSingleLineDocComments(l:info) == s:IS_TRUE
+  if s:HasSingleLineDocComments(l:info) == g:self#IS_TRUE
     return s:DOC_COMMENT_TYPE_SINGLE_LINE 
-  elseif s:HasMultilineDocComments(l:info) == s:IS_TRUE
+  elseif s:HasMultilineDocComments(l:info) == g:self#IS_TRUE
     return s:DOC_COMMENT_TYPE_MULTI_LINE 
   else
     call l:info.setDocCommentStart(s:rangeStart - l:info.getAnnotationCount())
@@ -3900,7 +3869,7 @@ function! s:HasDocComments(info)
 endfunction
 
 " --------------------------------------------------------
-" HasSingleLineDocComments
+" HasSingleLineDocComments: {{{2
 "   Does the current entity have a single-line ScalaDoc
 "   comment.
 " --------------------------------------------------------
@@ -3918,13 +3887,13 @@ function! s:HasSingleLineDocComments(info)
     call l:info.setSingleLineCommentPos(linenum)
     call l:info.setDocCommentStart(linenum)
     call l:info.setDocCommentEnd(linenum)
-    return s:IS_TRUE
+    return g:self#IS_TRUE
   endif
-  return s:IS_FALSE
+  return g:self#IS_FALSE
 endfunction
 
 " --------------------------------------------------------
-" HasMultilineDocComments
+" HasMultilineDocComments: {{{2
 "   Does the current entity have a multi-line ScalaDoc
 "   comment.
 " --------------------------------------------------------
@@ -3941,7 +3910,7 @@ function! s:HasMultilineDocComments(info)
 
   " not at a comment, return false
   if str !~ '\*/\s*$' || str =~ '/\*\*.*\*/'
-    return s:IS_FALSE
+    return g:self#IS_FALSE
   endif
 
   " move up the comment
@@ -3957,14 +3926,14 @@ function! s:HasMultilineDocComments(info)
   if str =~ '^\s*/\*\*'
     call l:info.setDocCommentEnd(l:docCommentEnd)
     call l:info.setDocCommentStart(linenum)
-    return s:IS_TRUE
+    return g:self#IS_TRUE
   else
-    return s:IS_FALSE
+    return g:self#IS_FALSE
   endif
 endfunction
 
 " --------------------------------------------------------
-" ExpandSinglelineCommentsEx
+" ExpandSinglelineCommentsEx: {{{2
 "   Expand a single-line comment into a multi-line comment
 " --------------------------------------------------------
 function! s:ExpandSinglelineCommentsEx(info, space)
@@ -3991,9 +3960,9 @@ function! s:ExpandSinglelineCommentsEx(info, space)
 endfunction
 
 " --------------------------------------------------------
-" AddEmptyLineBeforeComment
+" AddEmptyLineBeforeComment: {{{2
 "   Adds an empty line before comment if there is no
-"     empty line and if b:scommenter_add_empty_line is true.
+"     empty line and if g:scommenter_add_empty_line is true.
 " --------------------------------------------------------
 function! s:AddEmptyLineBeforeComment(info)
   let l:info = a:info
@@ -4029,7 +3998,7 @@ endfunction
 " =======================
 
 " --------------------------------------------------------
-" FindMaxTagNameLen
+" FindMaxTagNameLen: {{{2
 "   Given a set of tags, find the maximum name length 
 " --------------------------------------------------------
 function! s:FindMaxTagNameLen(tagsSet) 
@@ -4049,7 +4018,7 @@ function! s:FindMaxTagNameLen(tagsSet)
 endfunction
 
 " --------------------------------------------------------
-" FindMaxValueLen
+" FindMaxValueLen: {{{2
 "   Given a set of tags, find the maximum value length 
 " --------------------------------------------------------
 function! s:FindMaxValueLen(tagsSet)
@@ -4102,7 +4071,7 @@ let s:stdTagOrder = [
 \ ]
 
 " --------------------------------------------------------
-" WriteTags
+" WriteTags: {{{2
 "   Write all tags.
 " --------------------------------------------------------
 function! s:WriteTags(tagsSet, maxTagNameLen, tagTextOffset) 
@@ -4110,8 +4079,8 @@ function! s:WriteTags(tagsSet, maxTagNameLen, tagTextOffset)
   let maxTagNameLen = a:maxTagNameLen
   let tagTextOffset = a:tagTextOffset
 
-  if exists("b:scommenter_extra_line_text_offset") && b:scommenter_extra_line_text_offset > 0
-    let extraLineTextOffset = b:scommenter_extra_line_text_offset
+  if exists("g:scommenter_extra_line_text_offset") && g:scommenter_extra_line_text_offset > 0
+    let extraLineTextOffset = g:scommenter_extra_line_text_offset
   else
     " use same offset as first line
     let extraLineTextOffset = tagTextOffset
@@ -4122,31 +4091,31 @@ function! s:WriteTags(tagsSet, maxTagNameLen, tagTextOffset)
   " any tags not part of the standard tags
   let userOfUnknownTagNames = []
   for tagName in keys(tags)
-    let found = s:IS_FALSE
+    let found = g:self#IS_FALSE
     for stdTagName in s:stdTagOrder
       if tagName == stdTagName
-        let found = s:IS_TRUE
+        let found = g:self#IS_TRUE
         break
       endif
     endfor
-    if found == s:IS_FALSE
+    if found == g:self#IS_FALSE
       call add(userOfUnknownTagNames, tagName)
     endif
   endfor
 
   " should there be a line betweeen the user/unknown tags and 
   " the standard tags
-  if exists("b:scommenter_line_between_user_unknown_and_std_tags") && b:scommenter_line_between_user_unknown_and_std_tags
+  if exists("g:scommenter_line_between_user_unknown_and_std_tags") && g:scommenter_line_between_user_unknown_and_std_tags
     let hasLine = ! empty(userOfUnknownTagNames)
   else
-    let hasLine = s:IS_FALSE
+    let hasLine = g:self#IS_FALSE
   endif
 
   " should user/unknown tags appear before standard tags
-  if exists("b:scommenter_user_unknown_before_std_tags") && b:scommenter_user_unknown_before_std_tags
-    let userOrUnknowBeforeStd = s:IS_TRUE
+  if exists("g:scommenter_user_unknown_before_std_tags") && g:scommenter_user_unknown_before_std_tags
+    let userOrUnknowBeforeStd = g:self#IS_TRUE
   else
-    let userOrUnknowBeforeStd = s:IS_FALSE
+    let userOrUnknowBeforeStd = g:self#IS_FALSE
   endif
 
   if userOrUnknowBeforeStd
@@ -4163,7 +4132,7 @@ function! s:WriteTags(tagsSet, maxTagNameLen, tagTextOffset)
     call  s:WriteUserOrUnknownTag(tags, userOfUnknownTagNames, maxTagNameLen, tagTextOffset, extraLineTextOffset) 
   endif
 
-  if exists("b:scommenter_warn_deleted_tags") && b:scommenter_warn_deleted_tags 
+  if exists("g:scommenter_warn_deleted_tags") && g:scommenter_warn_deleted_tags 
     " Only when re-generating a comment will the tagsSet have the
     "   deletedTagsSet key.
     if has_key(tagsSet, "deletedTagsSet")
@@ -4205,7 +4174,7 @@ function! s:WriteUserOrUnknownTag(tags, userOfUnknownTagNames, maxTagNameLen, ta
 endfunction
 
 " --------------------------------------------------------
-" WriteTag  
+" WriteTag: {{{2
 "   Write tag at given output position (s:appendPos) using 
 "     current indent (s:indent)
 " --------------------------------------------------------
@@ -4262,7 +4231,7 @@ function! s:WriteTag(tag, maxTagNameLen, tagTextOffset, extraLineTextOffset)
 endfunction
 
 " --------------------------------------------------------
-" AddValueAndText
+" AddValueAndText: {{{2
 "  A tag line is made up of '* @tagName tagValue? tagText?'. 
 "    The tagText might be longer than the page-width. This
 "    method will output the tag line-wrapping the tagText
@@ -4275,13 +4244,13 @@ function! s:AddValueAndText(firstLine, tagText, tagTextOffset, extraLineTextOffs
   let extraLineTextOffset = a:extraLineTextOffset
 
   let indent_len = strlen(s:indent)
-  if indent_len + tagTextOffset + strlen(tagText) < b:scommenter_page_width
+  if indent_len + tagTextOffset + strlen(tagText) < g:scommenter_page_width
     let diff = tagTextOffset - strlen(firstLine)
     let sp = s:MakeEmptyString(diff + 2)
     call s:AppendCommentLine(firstLine . sp . tagText)
   else 
 
-    let offset = b:scommenter_page_width - indent_len - tagTextOffset - 6
+    let offset = g:scommenter_page_width - indent_len - tagTextOffset - 6
     let index = offset
     let c = strpart(tagText, index, 1)
     while c != ' ' && index > 0
@@ -4297,7 +4266,7 @@ function! s:AddValueAndText(firstLine, tagText, tagTextOffset, extraLineTextOffs
 
     " keep outputting tagText, breaking it into sections small enough
     " to fit on a line
-    let offset = b:scommenter_page_width - indent_len - extraLineTextOffset - 6
+    let offset = g:scommenter_page_width - indent_len - extraLineTextOffset - 6
     while strlen(tagText) > offset
       let index = offset
       let c = strpart(tagText, index, 1)
@@ -4384,11 +4353,11 @@ endfunction
 
 " --------------------------------------------------------
 " WarningMessage
-"   Printed only if b:scommenter_warning_message_enable 
+"   Printed only if g:scommenter_warning_message_enable 
 "     is true
 " --------------------------------------------------------
 function! s:WarningMessage(string)
-  if exists("b:scommenter_warning_message_enable") && b:scommenter_warning_message_enable
+  if exists("g:scommenter_warning_message_enable") && g:scommenter_warning_message_enable
     echo '[ScalaCommenter.WARING]: ' . a:string
   endif
 endfunction
@@ -4401,7 +4370,7 @@ endfunction
 
 
 " --------------------------------------------------------
-" GetCombinedString
+" GetCombinedString: {{{2
 "   Returns one string combined from the strings on the 
 "     given range.
 " --------------------------------------------------------
@@ -4422,12 +4391,12 @@ endfunction
 
 
 " --------------------------------------------------------
-" AddEmpty
+" AddEmpty: {{{2
 "   Adds an empty line a postion pos if 
-"     b:scommenter_add_empty_line is true.
+"     g:scommenter_add_empty_line is true.
 " --------------------------------------------------------
 function! s:AddEmpty(pos)
-  if exists("b:scommenter_add_empty_line") && b:scommenter_add_empty_line
+  if exists("g:scommenter_add_empty_line") && g:scommenter_add_empty_line
     if getline(a:pos) !~ '^\s*$'
       let oldAppendPos = s:appendPos
       let s:appendPos = a:pos
@@ -4481,20 +4450,20 @@ function! s:Trim(string)
 endfunction
 
 function! s:MoveCursor(info) 
-  if !exists("b:scommenter_move_cursor")
+  if !exists("g:scommenter_move_cursor")
     return
   endif
-  if !b:scommenter_move_cursor
+  if !g:scommenter_move_cursor
     return
   endif
 
-  if exists("b:scommenter_description_starts_from_first_line") && b:scommenter_description_starts_from_first_line
+  if exists("g:scommenter_description_starts_from_first_line") && g:scommenter_description_starts_from_first_line
     call s:MoveCursorToEOL(a:info.getDocCommentStart())
   else
     call s:MoveCursorToEOL(a:info.getDocCommentStart() + 1)
   endif
 
-  if exists("b:scommenter_autostart_insert_mode") && b:scommenter_autostart_insert_mode
+  if exists("g:scommenter_autostart_insert_mode") && g:scommenter_autostart_insert_mode
     startinsert
   endif
 endfunction
@@ -4503,3 +4472,8 @@ function! s:MoveCursorToEOL(line)
   exe "normal " . a:line . "G$"
 endfunction
 
+
+" ================
+"  Modelines: {{{1
+" ================
+" vim: ts=4 fdm=marker

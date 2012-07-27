@@ -1,0 +1,713 @@
+commenter.txt      For Vim version 7.3           Last change: 2012 July 19
+
+Author:      Richard Emberson 
+Version:     3.0
+Title:       Create and Re-Generate Scala Comments 
+Homepage:    http://www.vim.org/scripts/script.php?script_id=3047
+
+For Vim instructions on installing this 'txt' file, enter:
+    :help add-local-help
+
+==============================================================================
+0. Contents                                 *commenter* *commenter-contents*
+
+  0. Content                                 |commenter-contents|
+  1. Introduction                            |commenter-intro|
+  2. Installation                            |commenter-install|
+  3. Options                                 |commenter-options|
+  4. Supported Platforms                     |commenter-platforms|
+  5. Usage                                   |commenter-usage|
+  6. FAQ                                     |commenter-faq|
+  7. Release notes                           |commenter-release-notes|
+  8. Caveats                                 |commenter-caveats|
+  9. Todo List                               |commenter-todo|
+
+==============================================================================
+1. Introduction                                              *commenter-intro*
+
+Manage ScalaDoc comments for classes, traits, objects, methods, 
+vals and vars:
+  Generate comment templates and
+  Format existing comment '@' tag lines
+
+The comment generation code here inspired by Kalle Bjorklid's JCommenter >
+  http://www.vim.org/scripts/script.php?script_id=20
+<
+Some of the basic utility functions, some recognition patterns
+and many of the configuration parameters can be found in JCommenter.
+While JCommenter is written in a imperative style, ScalaCommenter
+has components that are Object Prototype based building on 
+the Self.vim script which can be found at >
+  http://www.vim.org/scripts/script.php?script_id=3072
+<
+The parameter algorithm has been re-worked, a template parameter 
+algorithm has been added for Scala; as well as recognizing class 
+constructors, values and variables.
+The formatting part of this script is also new.
+
+Functions for automatically generating ScalaDoc compatible comments.
+The scala#commenter#Writer() can produce a number of kinds of comments 
+depending on the current line/range.
+
+Supported tags in the order they should appear in a comment are: >
+
+  * @author      (top-level classes, traits and objects only, required)
+                 listed in chronological order
+  * @version     (top-level classes, traits and objects only, required)
+  * @param       (methods, classes and inner classes only)
+                 listed in argument-declaration order
+  * @tparam      (methods, all classes and all traits only)
+                 listed in template argument-declaration order
+  * @return      (methods only)
+  * @throws      (methods and all classes)
+                 listed in aplhabetical order
+  * @see         
+  * @since       
+  * @serial      
+  * @serialField
+  * @serialData
+  * @deprecated  
+<
+For more information (which may or may not apply to Scala )see:  >
+      http://java.sun.com/j2se/javadoc/writingdoccomments/
+<
+Comment templates can be generated for the following: 
+
+1. File comments: user specifies the template, generated when the
+  cursor is on the first line of the file.
+
+  There are a couple of built-in File Comment templates and each
+  user is encouraged to tailor for their or company needs.
+  Remember to enable only one such file comment template configuration
+  parameter and disable the rest. If all are disabled, then the
+  default File Comment template is used (see below).
+  
+  The StdFileComments() comment is enabled the configuration parameter:
+     let g:scommenter_std_file_comments = g:self#IS_TRUE >
+  /*
+   * file name   : bufname("%")
+   * authors     : g:scommenter_file_author
+   * created     : strftime("%c")
+   * copyright   : g:scommenter_file_copyright_line
+   *
+   * $Id: scala#commenter.vim 318 2010-05-10 22:47:17Z  $
+   *
+   * modifications:
+   *
+   */
+<
+
+  Here some of the lines are controlled by other configuration parameters.
+  bufname("%") produces the name of the current file
+  strftime("%c") produces the current date/time
+
+
+  The ScalaAPIFileComments() comment is enabled the configuration parameter:
+     let g:scommenter_scala_api_file_comments = g:self#IS_TRUE
+  This is the File Comment used in the Scala library. >
+  /*                     __                                               *\
+  **     ________ ___   / /  ___     Scala API                            **
+  **    / __/ __// _ | / /  / _ |    (c) 2002-2010, LAMP/EPFL             **
+  **  __\ \/ /__/ __ |/ /__/ __ |    http://scala-lang.org/               **
+  ** /____/\___/_/ |_/____/_/ | |                                         **
+  **                          |/                                          **
+  \*                                                                      */
+<
+
+  $Id: scala#commenter.vim 318 2010-05-10 22:47:17Z  $
+
+  For this template everything is hardcoded. If one wants to change, for
+  instance, the copyright dates, this VimScript code must be modified.
+
+  The SunFileComments() comment is enabled the configuration parameter: >
+     let g:scommenter_sun_file_comments = g:self#IS_TRUE
+<
+  This mirrors the File Comments found in Sun's Java libraries. >
+  /*
+   *  bufname("%")
+   *
+   * Copyright 2010 Sun, Inc. All rights reserved
+   * PPOPRIETARY/CONFIDENTIAL, Use is subject to licence terms.
+   *
+   *  $Id: scala#commenter.vim 318 2010-05-10 22:47:17Z  $
+   *
+   */
+<
+
+  This File Comment is provided because is shows how to create a
+  multi-line copyright using a VimScript List.
+
+
+  The DefaultFileComments() comment is used if no other File Comment
+  template has been selected via configuration. >
+  /*
+   * bufname("%")
+   * created: strftime("%d/%m/%y")
+   * 
+   * g:scommenter_file_copyright_list
+   * 
+   * $Id: scala#commenter.vim 318 2010-05-10 22:47:17Z  $
+   *
+   */
+<
+  
+  The g:scommenter_file_copyright_list is a list of lines that will 
+  appear in the comment. The list can be re-defined in this file
+  or in your .vimrc file to produce your own or your company's
+  copyright statement.
+  
+  The File Comment is NOT the place to document whats in the file. That
+  is done in the class/trait/object comments. Rather, the File Comment
+  is for file status and copyright information.
+  
+
+2. Class comments: generated when on top of a class declaration
+  Tags if applicable: @author, @version, @since, @param and @tparam
+
+  As an example, the class defined below will yield the following
+  Class Comment when scala#commenter#Writer is executed. >
+  /** 
+   * 
+   * 
+   * @author Richard Emberson
+   * @version 1.0, 06/04/10
+   * @since 1.0
+   * 
+   * @param  int (Int) 
+   * @param  name (String) 
+   * @tparam A 
+   * @tparam B 
+   * @throws IndexOutOfBoundsException
+   */
+  @throws(classOf[IndexOutOfBoundsException])
+  class SomeClass[A,B](int: Int, name: String) {}
+<
+   
+  The value of the @author comment is set by the configuration
+    parameter g:scommenter_class_author.
+  The value of the @version comment is set by the configuration
+    parameter g:scommenter_class_version.
+  The value of the @since comment is set by the configuration
+    parameter g:scommenter_since_release.
+
+  Note that the @param tags have not only the parameter name but also
+    its type. This is done because, generally, a parameter comment
+    includes its type so its included to aid the commenter.
+  This feature may be remove or made configurable depending on feedback.
+
+  The Exceptions will only be found if they are in an "@throws()"
+  annotation.
+
+3. Trait comments: generated when on top of a trait declaration
+  Tags if applicable: @author, @version and @since
+
+  As an example, the trait defined below will yield the following
+  Class Comment when scala#commenter#Writer is executed. >
+  /** 
+   * 
+   * 
+   * @author Richard Emberson
+   * @version 1.0, 06/04/10
+   * @since 1.0
+   */
+  trait SomeTrait {}
+<
+
+  As with the Class Comment, the values of the @author, @version and
+    @since are controlled by the configurable parameters
+    g:scommenter_class_author. g:scommenter_class_version and
+    g:scommenter_since_release respectfully.
+
+
+4. Object comments: generated when on top of a object declaration
+  Tags if applicable: @author, @version and @since
+
+  As an example, the object defined below will yield the following
+  Class Comment when scala#commenter#Writer is executed. >
+  /** 
+   * 
+   * 
+   * @author Richard Emberson
+   * @version 1.0, 06/04/10
+   * @since 1.0
+   */
+  object SomeObject {}
+<
+
+  As with the Class Comment, the values of the @author, @version and
+  @since are controlled by the configurable parameters
+  g:scommenter_class_author. g:scommenter_class_version and
+  g:scommenter_since_release respectfully.
+
+
+5. Inner Class comments: generated when on top of an inner class declaration
+  Tags if applicable: @param and @tparam
+  The Inner Class Comment is similar to the top-level Class Comment except
+  it does not include the @author, @version and @since tags.
+
+  As an example, the inner class defined below will yield the following
+  Inner Class Comment when scala#commenter#Writer is executed. >
+  /** 
+   * 
+   * 
+   * @param  int (Int) 
+   * @param  name (String) 
+   * @tparam A 
+   * @tparam B 
+   * @throws ClassCastException
+   * @throws IllegalAccessException
+   */
+  @throws(classOf[ClassCastException])
+  @throws(classOf[IllegalAccessException])
+  final class InnerSomeClass[A,B](int: Int, name: String) {}
+<
+ 
+
+6. Inner Trait comments: generated when on top of an inner trait declaration
+
+  An example follows: >
+  /** 
+   * 
+   */
+  trail InnerSomeTrait {}
+<
+
+7. Inner Object comments: generated when on top of an inner object declaration
+"
+  An example follows: >
+  /** 
+   * 
+   */
+  object InnerSomeObject {}
+<
+
+
+8. Method comments: generated when on top of a metod declaration.
+
+  Method Comments include the tags: @param, @tparam and @return 
+  (when return is not Unit). >
+  /** 
+   * map
+   * 
+   * @param  f (A => B) 
+   * @param  i (Int) 
+   * @param  s (String) 
+   * @tparam B 
+   * @tparam C 
+   * @return (Option[B])
+   * @throws NullPointerException
+   */
+  @throws(classOf[NullPointerException])
+  def map[B,[C]](f: A => B,i: Int,  s: String ): Option[B] =
+<
+
+  Note that the parameter and return types are included.
+  Also, the method name is also included in the comment template.
+  Again, feedback will determine if these stay in future release
+  of the script.
+
+9. Fields, val and var, comments: generated when on top of a var or val
+  declaration.
+
+  Two different Comments can be generated depending upon the value
+  of g:scommenter_field_description_space. If it is -1, then
+  a single line comment is created: >
+  /** */
+  val foo =
+<
+
+  On the other hand if it is positive, then a multi-line comment is 
+  created: >
+  /** 
+   *
+   */ 
+  var bar =
+<
+
+Comment formatting re-orders the order or the '@' tags as well as
+generates spacing so that tag values align and tag text align.
+This include handling multi-line tag text.
+If a comment contains the following comment tag lines:
+
+  * @author    Tom  Jones
+  * @version   1.3 03/10/50
+  * @param  name This is the name
+  * @param  value the value to associate with the time
+  *  This is a second line. Here is a second second line.
+  *    This is a third line. Here is a third third line.
+  * @throws java.io.EOFException For no reason
+  * @author Jane Doe
+  * @tparam A the value to associate with the time
+  * @throws java.io.FooBarException For no reason
+  *  This is a second line. Here is a second second line.
+  *    This is a third line. Here is a second third line.
+  * @see some reference
+  * @since 1.23
+
+First select the lines (I use visual selection) and then invoke 
+the scala#commenter#Formatter() function. This results in:
+
+ * @author  Tom Jones
+ * @author  Jane Doe
+ * @version 1.3 03/10/50
+ * @param   name                    This is the name
+ * @param   value                   the value to associate with the time
+ *                                  This is a second line. Here is a second
+ *                                  second line. This is a third line. Here
+ *                                  is a third third line.
+ * @tparam  A                       the value to associate with the time
+ * @throws  java.io.EOFException    For no reason
+ * @throws  java.io.FooBarException For no reason This is a second line.
+ *                                  Here is a second second line. This is a
+ *                                  third line. Here is a second third line.
+ * @see     some reference
+ * @since   1.23
+
+Note that all of the tag values are aligned and all of the tag text 
+is also aligned. In addition, tag of the same type have
+been grouped together and re-order to abide by Sun's JavaDoc guidelines
+(Scala does not yet have its own commenting guidelines).
+
+==============================================================================
+2. Installation                                             *commenter-install*
+
+The {Commenter} autoload 'commenter.vim' code file should be in 
+the 'autoload/scala' directory, the 'commenter.txt' in the 'doc/scala' 
+directory and the plugin 'commenter.vim' code in the 'plugin/scala' directory.
+
+==============================================================================
+3. Options                                                  *commenter-options*
+
+These help control the behavior of scala/comment.vim.
+Remember, if you change these in the code and then upgrade to a later 
+version, your changes will be lost.
+
+Move cursor to the place where inserting comments supposedly should start >
+  let g:scommenter_move_cursor = g:self#IS_TRUE
+<
+Defines whether to move the cursor to the line which has "/**", or the line
+after that (effective only if g:scommenter_move_cursor is enabled) ?
+  let g:scommenter_description_starts_from_first_line = g:self#IS_FALSE
+>
+Start insert mode after calling the commenter. Effective only if 
+g:scommenter_move_cursor is enabled. >
+  let g:scommenter_autostart_insert_mode = g:self#IS_FALSE
+<
+The number of empty rows (containing only the star) to be added for the 
+description of the method >
+<
+  let g:scommenter_method_description_space = 2
+The number of empty rows (containing only the star) to be added for the 
+description of the class >
+<
+  let g:scommenter_class_description_space = 2
+The number of empty rows (containing only the star) to be added for the 
+description of the object >
+<
+  let g:scommenter_object_description_space = 2
+The number of empty rows (containing only the star) to be added for the 
+description of the trait >
+  let g:scommenter_trait_description_space = 2
+<
+The number of empty rows (containing only the star) to be added for the 
+description of the inner class >
+  let g:scommenter_inner_class_description_space = 1
+<
+
+The number of empty rows (containing only the star) to be added for the 
+description of the inner object >
+  let g:scommenter_inner_object_description_space = 1
+<
+The number of empty rows (containing only the star) to be added for the 
+description of the inner trait >
+  let g:scommenter_inner_trait_description_space = 1
+<
+The number of empty rows (containing only the star) to be added for the´
+description of the field. Can be also -1, which means that "/**  */" is 
+added above the field declaration  >
+  let g:scommenter_field_description_space = 1
+<
+If this option is enabled, and a method has no exceptions, parameters,
+template parameters or return value, the space for the description of 
+that method is allways one row. This is handy if you want to keep an 
+empty line between the description and the tags, as is defined in 
+Sun's java code conventions >
+  let g:scommenter_smart_description_spacing = g:self#IS_TRUE
+<
+For top-level classes with parameters and template parameters and traits with
+template parameters, if enabled then an empty line separates the 
+@since tag and any @param and/or @tparam tags.
+Note: currently not supported >
+  let g:scommenter_smart_since_spacing = g:self#IS_TRUE
+<
+The default content for the author-tag of class-comments. Leave empty to add
+just the empty tag, or outcomment to prevent author tag generation >
+  let g:scommenter_class_author = 'Richard Emberson'
+<
+Include '@version version, date' in class/trait/object comments
+Used to indicate the current version of the particular class/trait/object. >
+  let g:scommenter_class_version = '1.0, ' . strftime("%d/%m/%y")
+<
+Include '@since since_release' in class/trait/object comments
+Used to indicate that the class/trait/object has been part of the
+application since a given release. >
+  let g:scommenter_since_release = '1.0'
+<
+The default content for the version-tag of class-comments. Leave empty to add
+just the empty tag, or comment-out to prevent version tag generation >
+  let g:scommenter_class_svn_id = '$Id: scala#commenter.vim 318 2010-05-10 22:47:17Z  $'
+<
+The default author added to the file comments. Leave empty to add just the
+field where the author can be added, or comment-out to remove it. >
+  let g:scommenter_file_author = 'Richard Emberson'
+<
+The default copyright holder added to the file comments. Leave empty to
+add just the field where the copyright info can be added, or comment-out
+to remove it. >
+  let g:scommenter_file_copyright_line = ''
+  let g:scommenter_company_name = 'ScalaCorp, Inc.'
+  let g:scommenter_file_copyright_list = [
+    \    'Copyright 2010 ' . g:scommenter_company_name . 'All rights reserved',
+    \    'PPOPRIETARY/CONFIDENTIAL, Use is subject to licence terms.'
+    \]
+<
+Set to true if you don't like the automatically added "created"-time >
+  let g:scommenter_file_noautotime = g:self#IS_FALSE
+<
+Define whether scommenter tries to parse and update the existing Doc-comments
+on the item it was executed on. If this feature is disabled, a completely 
+new comment-template is written >
+  let g:scommenter_update_comments = g:self#IS_TRUE
+<
+Whether to prepend an empty line before the generated comment, if the
+line just above the comment would otherwise be non-empty. >
+  let g:scommenter_add_empty_line = 1
+<
+Uncomment and modify if you're not happy with the default file
+comment-template:
+"
+"function! ScalaCommenter_OwnFileComments()
+"  call append(0, '/*')
+"  call append(1, ' * File name   : ' . bufname("%"))
+"  call append(2, ' * authors     : ')
+"  call append(3, ' * created     : ' . strftime("%c"))
+"  call append(4, ' *')
+"  call append(5, ' */')
+"endfunction
+Set to g:self#IS_TRUE to use the StdFileComments function to write file 
+comments >
+  let g:scommenter_std_file_comments = g:self#IS_FALSE
+<
+Set to g:self#IS_TRUE to use the ScalaAPIFileComments function to write file 
+comments >
+  let g:scommenter_scala_api_file_comments = g:self#IS_FALSE 
+<
+Set to g:self#IS_TRUE to use the SunFileComments function to write file 
+comments >
+  let g:scommenter_sun_file_comments = g:self#IS_FALSE
+<
+If true, then only top-level template parameters have @tparam tags 
+generated. If false, then all template parameters have tags generated >
+  let g:scommenter_top_level_tparams_only = g:self#IS_TRUE
+<
+Line width of a page. This is used when wrapping text in comments >
+  let g:scommenter_page_width = 80
+<
+If positive, this is the value used to offset extra tag text lines,
+If non-positive, then the extra text lines will line up with the
+tag's first line's text.
+NOTE: This is a very useful formatting parameter, I suggest defining
+it to be 20. That way extra text lines will not have to be all
+the way on the right like the first text line. >
+  let g:scommenter_extra_line_text_offset = -1
+<
+Used by a user to define third-party tags
+format of a user tag definition:
+    tagName, hasValue, hasText, canHaveMoreThanOne
+ where
+    tagName             - name of the third-party tag (@name)
+    hasValue            - a value string (possibly with spaces but
+                          single line)
+    hasText             - text description (possibly multi-line)
+    canHaveMoreThanOne  - can there be more than on such tag
+
+  Remember that if a tag type has a value, then the combination of
+  tagName and tagValue is unique per comment.
+
+Examples:
+  Tag found in Scala code:
+   @note text
+      let g:scommenter_user_tags = [
+        \ ["note", 0, 1, 0]
+        \ ]
+  has name, no value, has text, singleton
+
+Tags found in earlier Scala code:
+   @pre text
+   @post text
+   @requires value text
+   @provides text
+      let g:scommenter_user_tags = [
+        \ ["pre", 0, 1, 0],
+        \ ["post", 0, 1, 0],
+        \ ["requires", 1, 1, 0],
+        \ ["provides", 0, 1, 0]
+        \ ]
+
+Class concurrency annotations
+   @immutable
+   @threadsafe
+   @notthreadsave
+      let g:scommenter_user_tags = [
+        \ ["immutable", 0, 1, 0],
+        \ ["threadsafe", 0, 1, 0],
+        \ ["notthreadsafe", 0, 1, 0]
+        \ ]
+
+Method and Field concurrency annotations
+   @guardedby value
+      let g:scommenter_user_tags = [
+        \ ["guardedby", 1, 1, 0]
+        \ ]
+    has name, has value, has text, singleton
+
+  let g:scommenter_user_tags = []
+
+If true, then warning messages are printed, otherwise nothing
+If some configuration parameter is not doing what you think it 
+should or nothing is happening, then set this to g:self#IS_TRUE (in your
+.vimrc file using 1) >
+  let g:scommenter_warning_message_enable = g:self#IS_FALSE
+<
+Should an empty comment line be printed between an user/unknown
+tags the standard tags. If there are no user/unknown tags, then
+no line is produced. >
+  let g:scommenter_line_between_user_unknown_and_std_tags = g:self#IS_TRUE
+<
+Should the user/unknown tags be formatted before any of the 
+standard tags. If there are no user/unknown tags, then this
+parameter does nothing. >
+  let g:scommenter_user_unknown_before_std_tags = g:self#IS_TRUE
+<
+When re-generating comments sometimes the values associated with of @param
+or @tparam will change but the text associate with the tag still applies.
+For instance, if a argument name changes from 'id' to 'identifier',
+then the original 'param' tag will be deleted and a new one generated.
+This tag might have had useful descriptive text.
+If this parameter is true, then rather than being deleted, the original
+tag is move to the bottom of the comment below a warining line.
+This allows the user to move the tags text to the new tag if that is
+what is needed >
+  let g:scommenter_warn_deleted_tags = g:self#IS_TRUE
+<
+
+==============================================================================
+4. Supported Platforms                                     *commenter-platforms*
+
+The {Commenter} script ought to run all all platforms.
+
+==============================================================================
+5. Usage                                                       *commenter-usage*
+
+Place cursor on line with object, class, var, val or def is declared and
+invoke: scala#commenter#Writer().
+
+To re-format an existing scala comment, place cursor within the bounds
+of the comment and invoke: scala#commenter#Formatter()
+
+These commands are defined as key mappings in the 
+plugin/scala/commenter.vim file: >
+  autocmd FileType scala map cm :call scala#commenter#Writer()<CR>
+  autocmd FileType scala map cf :call scala#commenter#Formatter()<CR>
+<
+
+==============================================================================
+6. FAQ                                                          *commenter-faq*
+>
+    Q: Why don't you support my favorite way of commenting?
+<
+    A: Tell me about it an maybe I will.
+
+==============================================================================
+7. Release notes                                      *commenter-release-notes*
+
+    3.0 Release Note: ~
+      Support for autoloading.
+
+    2.2 Release Note: ~
+      Method parameter recognition failed def getAtomicVars(atomicMethods:
+      List[XMethodInfo], methods: HashMap[global.Symbol, XMethodInfo], 
+      vars: HashMap[global.Symbol, XVarInfo]) : List[XVarInfo] = {  }
+
+    2.1 Release Note: ~
+      Method recognition failed for the List methods: '::', 
+      ':::' and 'reverse_:::'.
+
+    2.0 Release Note: ~
+      Refactored comment generation code using Self.vim, the Vim 
+        dictionary-base object prototype system. Unified the code that
+        generated output for both the writing and re-formatting of comments.
+      Throw tags are now sorted in alphabetical order
+      Unified the comment writing code so that comment formatting,
+        first comment generation, and subsequent generation all
+        use the came code.
+      Text associated with an existing comment tag is no longer lost.
+      Add g:scommenter_top_level_tparams_only which controls if all
+        template parameters have @tparam tags generated or only those
+        at the top-level have tags generated.
+      Fixed scanning parameters, now scans past qualifiers like 'val',
+        'var' or 'private var', etc.
+      Supports curried notations func(a: A)(b: B). 
+      Added g:scommenter_extra_line_text_offset allowing the user to control
+        the offset of any additional text associated with a tag.
+      There is now a g:scommenter_user_tags configuration variable allowing
+        the user to register in their .vimrc file third-party tags.
+      Added g:scommenter_warning_message_enable which controls the printing
+        of warning messages (if any)
+      Added g:scommenter_line_between_user_unknown_and_std_tags which
+        controls if a single comment line is printed between the
+        user/unknown tags and the standard tags.
+      Added g:scommenter_user_unknown_before_std_tags which controls the
+        order of formatting of the user/unknown tags and the standard tags.
+      Added g:scommenter_warn_deleted_tags which allows the user to
+        save the text from tags deleted during re-formatting.
+      Supports capturing parameter template @specialized information
+        in comments.
+      The @deprecated(text) annotation now becomes a ScalaDoc @deprecated
+        tag (just as the @throws annotation does).
+
+    1.0 Release Note: ~
+      Initial public release.
+
+==============================================================================
+8. Caveats                                                   *commenter-caveats*
+
+The approach to recognizing template parameters only works for simple cases.
+Something like [Null >: A <: AnyRef] will not be correctly read.
+
+When method starts with "get", "is", or "has" and the method takes no
+parameter, it should be possible to automagically produce the comment
+documentation and return information.
+
+When method starts with "set" and the method takes only one parameter, it
+should be possible to automagically produce the comment documentation and
+parameter information.
+
+When formatting @see tags, no attempt is made to re-order 2 or more of them.
+
+The formatter has no knowledge of embedded HTML tags.
+
+There is currently no support for reading an entity's annotations and
+generating comment tags except for the "@throws" and "@deprecated"
+annotations which do work.  To support such a feature, users would have to be
+able to write their own regular expression to recognize and extract one or
+more elements.
+
+==============================================================================
+9. Todo List                                                   *commenter-todo*
+
+    * Configurable: support Scala 2.9.x or 2.10.x comment params.
+
+==============================================================================
+
+vim:tw=78:ts=8:noet:ft=help:fo+=t:norl:noet:
