@@ -52,9 +52,16 @@ For more information (which may or may not apply to Scala) see
 
 # Installation
 
-The {Commenter} autoload 'commenter.vim' code file should be in 
+The Commenter autoload 'commenter.vim' code file should be in 
 the 'autoload/scala' directory, the 'commenter.txt' in the 'doc/scala' 
 directory and the plugin 'commenter.vim' code in the 'plugin/scala' directory.
+
+# Dependency
+
+The Scala Commenter depends upon the Vim Self library:
+[Vim](http://www.vim.org/scripts/script.php?script_id=3072)
+[GitHub](https://github.com/megaannum/self)
+
 
 # Usage
 

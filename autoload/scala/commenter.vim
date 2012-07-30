@@ -5,7 +5,7 @@
 " Summary:       Vim Scala Comment formatting Script
 " Author:        Richard Emberson <richard.n.embersonATgmailDOTcom>
 " Last Modified: 07/30/2012
-" Version:       2.0
+" Version:       3.0.2
 " Modifications:
 "  2.0 : autoload enabled
 "  1.0 : initial public release.
@@ -292,46 +292,48 @@ let g:scommenter_warn_deleted_tags = g:self#IS_TRUE
 " Summary:       Functions for documenting Scala-code
 " Author:        Richard Emberson <richard.n.embersonATgmailDOTcom>
 " Last Modified: 05/10/2010
-" Version:       2.2
+" Version:       3.0.2
 " Modifications:
-"  2.2 : Method parameter recognition failed def getAtomicVars(atomicMethods:
+"  3.0.1 : Chagne name to addon-info.json
+"  3.0   : Support autoloading
+"  2.2   : Method parameter recognition failed def getAtomicVars(atomicMethods:
 "          List[XMethodInfo], methods: HashMap[global.Symbol, XMethodInfo], 
-"          vars: HashMap[global.Symbol, XVarInfo]) : List[XVarInfo] = {  }
-"  2.1 : Method recognition failed for the List methods: '::', 
+"           vars: HashMap[global.Symbol, XVarInfo]) : List[XVarInfo] = {  }
+"  2.1   : Method recognition failed for the List methods: '::', 
 "          ':::' and 'reverse_:::'.
-"  2.0 : Refactored comment generation code using Self.vim, the Vim 
-"          dictionary-base object prototype system. Unified the code that
-"          generated output for both the writing and re-formatting of
+"  2.0   : Refactored comment generation code using Self.vim, the Vim 
+"           dictionary-base object prototype system. Unified the code that
+"           generated output for both the writing and re-formatting of
 "          comments.
-"        Throw tags are now sorted in alphabetical order
-"        Unified the comment writing code so that comment formatting,
-"          first comment generation, and subsequent generation all
-"          use the came code.
-"        Text associated with an existing comment tag is no longer lost.
-"        Add g:scommenter_top_level_tparams_only which controls if all
-"          template parameters have @tparam tags generated or only those
-"          at the top-level have tags generated.
-"        Fixed scanning parameters, now scans past qualifiers like 'val',
-"          'var' or 'private var', etc.
-"        Supports curried notations func(a: A)(b: B). 
-"        Added g:scommenter_extra_line_text_offset allowing the user to control
-"          the offset of any additional text associated with a tag.
-"        There is now a g:scommenter_user_tags configuration variable allowing
-"          the user to register in their .vimrc file third-party tags.
-"        Added g:scommenter_warning_message_enable which controls the printing
-"          of warning messages (if any)
-"        Added g:scommenter_line_between_user_unknown_and_std_tags which
-"          controls if a single comment line is printed between the
-"          user/unknown tags and the standard tags.
-"        Added g:scommenter_user_unknown_before_std_tags which controls the
-"          order of formatting of the user/unknown tags and the standard tags.
-"        Added g:scommenter_warn_deleted_tags which allows the user to
-"          save the text from tags deleted during re-formatting.
-"        Supports capturing parameter template @specialized information
-"          in comments.
-"        The @deprecated(text) annotation now becomes a ScalaDoc @deprecated
-"           tag (just as the @throws annotation does).
-"  1.0 : initial public release.
+  "        Throw tags are now sorted in alphabetical order
+  "        Unified the comment writing code so that comment formatting,
+  "          first comment generation, and subsequent generation all
+  "          use the came code.
+  "        Text associated with an existing comment tag is no longer lost.
+  "        Add g:scommenter_top_level_tparams_only which controls if all
+  "          template parameters have @tparam tags generated or only those
+  "          at the top-level have tags generated.
+  "        Fixed scanning parameters, now scans past qualifiers like 'val',
+  "          'var' or 'private var', etc.
+  "        Supports curried notations func(a: A)(b: B). 
+  "        Added g:scommenter_extra_line_text_offset allowing the user to control
+  "          the offset of any additional text associated with a tag.
+  "        There is now a g:scommenter_user_tags configuration variable allowing
+  "          the user to register in their .vimrc file third-party tags.
+  "        Added g:scommenter_warning_message_enable which controls the printing
+  "          of warning messages (if any)
+  "        Added g:scommenter_line_between_user_unknown_and_std_tags which
+  "          controls if a single comment line is printed between the
+  "          user/unknown tags and the standard tags.
+  "        Added g:scommenter_user_unknown_before_std_tags which controls the
+  "          order of formatting of the user/unknown tags and the standard tags.
+  "        Added g:scommenter_warn_deleted_tags which allows the user to
+  "          save the text from tags deleted during re-formatting.
+  "        Supports capturing parameter template @specialized information
+  "          in comments.
+  "        The @deprecated(text) annotation now becomes a ScalaDoc @deprecated
+  "           tag (just as the @throws annotation does).
+"  1.0   : initial public release.
 "
 " Tested on vim 7.2 on Linux
 
@@ -1026,7 +1028,6 @@ if g:self#IN_DEVELOPMENT_MODE
 endif
 function! s:loadInfoPrototype()
   if !exists("s:InfoPrototype")
-    " let s:InfoPrototype = g:loadObjectPrototype().create()
     let s:InfoPrototype = self#LoadObjectPrototype().clone('Info')
     let s:InfoPrototype.__ctype = s:UNKNOWN_TYPE
     let s:InfoPrototype.__descriptionSpace = 0
@@ -1120,8 +1121,6 @@ if g:self#IN_DEVELOPMENT_MODE
 endif
 function! s:loadTagsSetPrototype()
   if !exists("s:TagsSetPrototype")
-    " let s:TagsSetPrototype = g:loadObjectPrototype().create()
-    " let s:TagsSetPrototype._type = 'TagsSetPrototype'
     let s:TagsSetPrototype = self#LoadObjectPrototype().clone('TagsSet')
     let s:TagsSetPrototype.__tags = { }
 
@@ -1245,8 +1244,6 @@ if g:self#IN_DEVELOPMENT_MODE
 endif
 function! s:loadBaseTagPrototype()
   if !exists("s:BaseTagPrototype")
-    " let s:BaseTagPrototype = g:loadObjectPrototype().create()
-    " let s:BaseTagPrototype._type = 'BaseTagPrototype'
     let s:BaseTagPrototype = self#LoadObjectPrototype().clone('BaseTag')
     let s:BaseTagPrototype.__tagName = ''
     let s:BaseTagPrototype.__hasValue = g:self#IS_FALSE
@@ -2034,8 +2031,6 @@ if g:self#IN_DEVELOPMENT_MODE
 endif
 function! s:loadAbstractEntityPrototype()
   if !exists("s:AbstractEntityPrototype")
-    " let s:AbstractEntityPrototype = g:loadObjectPrototype().create()
-    " let s:AbstractEntityPrototype._type = 'AbstractEntityPrototype'
     let s:AbstractEntityPrototype = self#LoadObjectPrototype().clone('AbstractEntity')
     let s:AbstractEntityPrototype.__standardTags = []
     let s:AbstractEntityPrototype.__name = ''
