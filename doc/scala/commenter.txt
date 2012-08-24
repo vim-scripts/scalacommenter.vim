@@ -1,7 +1,7 @@
-commenter.txt      For Vim version 7.3           Last change: 2012 July 19
+*commenter.txt*      For Vim version 7.3           Last change: 2012 July 19
 
 Author:      Richard Emberson 
-Version:     3.0.2
+Version:     3.0.3
 Title:       Create and Re-Generate Scala Comments 
 Homepage:    http://www.vim.org/scripts/script.php?script_id=3047
 

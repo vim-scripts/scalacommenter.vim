@@ -5,7 +5,7 @@
 " Summary:       Vim Scala Comment formatting Script
 " Author:        Richard Emberson <richard.n.embersonATgmailDOTcom>
 " Last Modified: 07/30/2012
-" Version:       3.0.2
+" Version:       3.0.3
 " Modifications:
 "  2.0 : autoload enabled
 "  1.0 : initial public release.
@@ -292,8 +292,10 @@ let g:scommenter_warn_deleted_tags = g:self#IS_TRUE
 " Summary:       Functions for documenting Scala-code
 " Author:        Richard Emberson <richard.n.embersonATgmailDOTcom>
 " Last Modified: 05/10/2010
-" Version:       3.0.2
+" Version:       3.0.3
 " Modifications:
+"  3.0.3 : Changed from type to kind.
+"  3.0.2 : Vim 7.3 could not handle construct: call funcReturnDictionary().someFunc()
 "  3.0.1 : Chagne name to addon-info.json
 "  3.0   : Support autoloading
 "  2.2   : Method parameter recognition failed def getAtomicVars(atomicMethods:
@@ -1401,8 +1403,6 @@ if g:self#IN_DEVELOPMENT_MODE
 endif
 function! s:loadLeafTagPrototype()
   if !exists("s:LeafTagPrototype")
-    " let s:LeafTagPrototype = s:loadBaseTagPrototype().clone()
-    " let s:LeafTagPrototype._type = 'LeafTagPrototype'
     let s:LeafTagPrototype = s:loadBaseTagPrototype().clone('LeafTag')
     let s:LeafTagPrototype.__canBePoly = g:self#IS_FALSE
     let s:LeafTagPrototype.__tagValue = ''
@@ -1491,8 +1491,6 @@ if g:self#IN_DEVELOPMENT_MODE
 endif
 function! s:loadPolyTagPrototype()
   if !exists("s:PolyTagPrototype")
-    " let s:PolyTagPrototype = s:loadBaseTagPrototype().clone()
-    " let s:PolyTagPrototype._type = 'PolyTagPrototype'
     let s:PolyTagPrototype = s:loadBaseTagPrototype().clone('PolyTag')
     let s:PolyTagPrototype.__list = []
 
@@ -2455,7 +2453,7 @@ endif
 function! s:loadInnerClassEntityPrototype()
   if !exists("s:InnerClassEntityPrototype")
     let s:InnerClassEntityPrototype = s:loadAbstractEntityPrototype().clone()
-    let s:InnerClassEntityPrototype._type = 'InnerClassEntityPrototype'
+    let s:InnerClassEntityPrototype._kind = 'InnerClassEntityPrototype'
 
     function! s:InnerClassEntityPrototype.clone() dict
       let l:o = g:ObjectPrototype._clone(self)
@@ -2541,8 +2539,6 @@ if g:self#IN_DEVELOPMENT_MODE
 endif
 function! s:loadInnerTraitEntityPrototype()
   if !exists("s:InnerTraitEntityPrototype")
-    " let s:InnerTraitEntityPrototype = s:loadAbstractEntityPrototype().clone()
-    " let s:InnerTraitEntityPrototype._type = 'InnerTraitEntityPrototype'
     let s:InnerTraitEntityPrototype = s:loadAbstractEntityPrototype().clone('InnerTraitEntity')
     let s:InnerTraitEntityPrototype.__standardTags = ['tparam', 'see', 'deprecated']
 
@@ -2608,8 +2604,6 @@ if g:self#IN_DEVELOPMENT_MODE
 endif
 function! s:loadInnerObjectEntityPrototype()
   if !exists("s:InnerObjectEntityPrototype")
-    " let s:InnerObjectEntityPrototype = s:loadAbstractEntityPrototype().clone()
-    " let s:InnerObjectEntityPrototype._type = 'InnerObjectEntityPrototype'
     let s:InnerObjectEntityPrototype = s:loadAbstractEntityPrototype().clone('InnerObjectEntity')
     let s:InnerObjectEntityPrototype.__standardTags = ['see', 'deprecated']
 
@@ -2663,8 +2657,6 @@ if g:self#IN_DEVELOPMENT_MODE
 endif
 function! s:loadClassEntityPrototype()
   if !exists("s:ClassEntityPrototype")
-    " let s:ClassEntityPrototype = s:loadAbstractEntityPrototype().clone()
-    " let s:ClassEntityPrototype._type = 'ClassEntityPrototype'
     let s:ClassEntityPrototype = s:loadAbstractEntityPrototype().clone('ClassEntity')
     let s:ClassEntityPrototype.__standardTags = [ 'author', 'version', 'param', 'tparam', 'throws', 'since', 'serial', 'see', 'deprecated' ]
 
@@ -2749,8 +2741,6 @@ if g:self#IN_DEVELOPMENT_MODE
 endif
 function! s:loadTraitEntityPrototype()
   if !exists("s:TraitEntityPrototype")
-    " let s:TraitEntityPrototype = s:loadAbstractEntityPrototype().create()
-    " let s:TraitEntityPrototype._type = 'TraitEntityPrototype'
     let s:TraitEntityPrototype = s:loadAbstractEntityPrototype().clone('TraitEntity')
     let s:TraitEntityPrototype.__standardTags = [ 'author', 'version', 'tparam', 'since', 'see', 'deprecated' ]
 
@@ -2827,8 +2817,6 @@ if g:self#IN_DEVELOPMENT_MODE
 endif
 function! s:loadObjectEntityPrototype()
   if !exists("s:ObjectEntityPrototype")
-    " let s:ObjectEntityPrototype = s:loadAbstractEntityPrototype().create()
-    " let s:ObjectEntityPrototype._type = 'ObjectEntityPrototype'
     let s:ObjectEntityPrototype = s:loadAbstractEntityPrototype().clone('ObjectEntity')
     let s:ObjectEntityPrototype.__standardTags = [ 'author', 'version', 'since', 'see', 'deprecated' ]
 
@@ -2893,8 +2881,6 @@ if g:self#IN_DEVELOPMENT_MODE
 endif
 function! s:loadMethodEntityPrototype()
   if !exists("s:MethodEntityPrototype")
-    " let s:MethodEntityPrototype = s:loadAbstractEntityPrototype().create()
-    " let s:MethodEntityPrototype._type = 'MethodEntityPrototype'
     let s:MethodEntityPrototype = s:loadAbstractEntityPrototype().clone('MethodEntity')
     let s:MethodEntityPrototype.__standardTags = [ 'param', 'tparam', 'return', 'throws', 'since', 'see', 'deprecated' ]
 
@@ -3056,8 +3042,6 @@ if g:self#IN_DEVELOPMENT_MODE
 endif
 function! s:loadFieldEntityPrototype()
   if !exists("s:FieldEntityPrototype")
-    " let s:FieldEntityPrototype = s:loadAbstractEntityPrototype().create()
-    " let s:FieldEntityPrototype._type = 'FieldEntityPrototype'
     let s:FieldEntityPrototype = s:loadAbstractEntityPrototype().clone('FieldEntity')
     let s:FieldEntityPrototype.__standardTags = [ 'serial', 'serialField', 'since', 'see', 'deprecated' ]
 

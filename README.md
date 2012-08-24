@@ -80,3 +80,7 @@ plugin/scala/commenter.vim file:
 ## Vim
 
 [Vim location](http://www.vim.org/scripts/script.php?script_id=3047)
+
+## Acknowledgements and thanks
+
+- Andy Wokula: provided feedback on help file syntax.
